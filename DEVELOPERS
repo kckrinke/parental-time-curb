@@ -1,0 +1,34 @@
+DEVELOPER DETAILS
+-------------------------
+
+The following information is only relevant to developers.
+
+Techniques Used
+-------------------------
+
+- password -l <user> to prevent logins, -u to re-enable
+- slay to kill all user processes
+- cron.d every minute to perform maintenance and act when necessary
+- /var/lib/ file heirarchy for transitory tracker files
+- no daemons required for core functionality
+
+System Paths Used
+-------------------------
+
+# crontab for tracking
+/etc/cron.d/parental-control
+
+# users.d for configuring users
+/etc/parental-control/users.d
+
+# example configuration file
+/usr/share/parental-control/example.user.conf
+
+# worker scripts
+/usr/lib/parental-control
+
+# accounting data
+/var/lib/parental-control
+
+# logging
+/var/log/parental-control.log

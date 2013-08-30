@@ -1,0 +1,24 @@
+Source: parental-control
+Section: admin
+Priority: extra
+Maintainer: Kevin C. Krinke <kevin@krinke.ca>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Homepage: http://kevin.c.krinke.ca/code/parental-control
+#Vcs-Git: git://git.debian.org/collab-maint/parental-control.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/parental-control.git;a=summary
+
+Package: parental-control
+Architecture: all
+Depends: ${misc:Depends}, slay, coreutils, libnotify-bin, bash, cron, perl, procps, passwd
+Description: Limit the amount of time a user can be on the computer.
+ Parents can set how many minutes per day a user account can be logged in.
+ Parents set up "start" and "end" times and users can spend their daily
+ maximum number of minutes within that range. Once either their daily
+ maximum number of minutes is used up or the end-time is met, the user
+ account is forcibly logged out and their login is locked down. The
+ daily maximum is reset and the user can login after the "start" time
+ the next day.
+ .
+ This package was created by a parent trying to solve their own needs. If
+ you find this useful... Enjoy!

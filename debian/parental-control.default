@@ -1,0 +1,2 @@
+# To enable the parental-control, set ENABLED to 1
+ENABLED=0

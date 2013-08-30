@@ -1,0 +1,3 @@
+src/common.sh usr/lib/parental-control/
+src/tracker usr/lib/parental-control/
+src/example.user.conf usr/share/parental-control/

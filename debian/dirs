@@ -1,0 +1,5 @@
+etc/parental-control
+etc/parental-control/users.d
+usr/share/parental-control
+usr/lib/parental-control
+var/lib/parental-control

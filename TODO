@@ -1,0 +1,13 @@
+TODO / IDEAS
+-------------------------
+
+- administrative UI of some sort
+  - ideally a graphical interface AND a curses interface
+  - easily allow for remote administration via ssh (and without X)
+- rewards system
+  - grant bonus minutes to the DAILY_MAX
+  - grant extentions to the DAILY_CLOSE_HOUR and DAILY_CLOSE_MINUTE
+- restrict use of the internet
+  - blacklist / whitelist websites and specific URLs
+  - limit time spent on specific sites and base URLs (ie: 30 minutes of youtube)
+  - limit total bandwidth used per-month and per-day
