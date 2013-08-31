@@ -1,5 +1,5 @@
-etc/parental-control
-etc/parental-control/users.d
-usr/share/parental-control
-usr/lib/parental-control
-var/lib/parental-control
+etc/parental-time-curb
+etc/parental-time-curb/users.d
+usr/share/parental-time-curb
+usr/lib/parental-time-curb
+var/lib/parental-time-curb

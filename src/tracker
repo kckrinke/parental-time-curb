@@ -3,7 +3,7 @@
 export DRY_RUN=0
 [ "$1" == "--dry-run" ] && export DRY_RUN=1
 
-. /usr/lib/parental-control/common.sh
+. /usr/lib/parental-time-curb/common.sh
 
 is_enabled
 if [ $? -ne 0 ]
@@ -23,10 +23,10 @@ fi
 #       else give notification
 
 write_log "tracker run started"
-for user_name in $(/bin/ls /etc/parental-control/users.d | egrep -v '~$')
+for user_name in $(/bin/ls /etc/parental-time-curb/users.d | egrep -v '~$')
 do
     (
-        user_conf=/etc/parental-control/users.d/${user_name}
+        user_conf=/etc/parental-time-curb/users.d/${user_name}
         . ${user_conf}
         if [ "$ENABLED" == "1" ]
         then
@@ -47,7 +47,7 @@ do
 	    #
 	    #: Check timestamps and reset counters
 	    #
-	    daily_total_file=/var/lib/parental-control/${user_name}.daily_total
+	    daily_total_file=/var/lib/parental-time-curb/${user_name}.daily_total
 	    file_day=$(date -r ${daily_total_file} +%d)
 	    today=$(date +%d)
 	    if [ $file_day -ne $today ]

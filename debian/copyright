@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: parental-control
-Source: http://kevin.c.krinke.ca/code/parental-control
+Upstream-Name: parental-time-curb
+Source: http://kevin.c.krinke.ca/code/parental-time-curb
 
 Files: *
 Copyright: 2013 Kevin C. Krinke

@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for parental-control
+# postinst script for parental-time-curb
 #
 # see: dh_installdeb(1)
 
@@ -21,19 +21,19 @@ set -e
 case "$1" in
     configure)
 	# make sure that the tracker script is executable
-	chmod 700 /usr/lib/parental-control
-	chmod 440 /usr/lib/parental-control/common.sh
-	chmod 550 /usr/lib/parental-control/tracker
+	chmod 700 /usr/lib/parental-time-curb
+	chmod 440 /usr/lib/parental-time-curb/common.sh
+	chmod 550 /usr/lib/parental-time-curb/tracker
 	# make sure that the conf dir isn't readable except to root
-	chmod 700 /etc/parental-control
-	chown root.root /etc/parental-control
+	chmod 700 /etc/parental-time-curb
+	chown root.root /etc/parental-time-curb
 	# make sure that the var lib dir isn't readable except to root
-	chmod 700 /var/lib/parental-control
-	chown root.root /var/lib/parental-control
+	chmod 700 /var/lib/parental-time-curb
+	chown root.root /var/lib/parental-time-curb
 	# for each user above 1000, copy an example config into place
 	# note that the example config isn't active for any user until
 	# it is explicitly edited and has ENABLE set to "1"
-	source=/usr/share/parental-control/example.user.conf
+	source=/usr/share/parental-time-curb/example.user.conf
 	awk -F: '$3 >= 1000 {print $1}' /etc/passwd | while read USERNAME
 	do
 	    case $USERNAME in
@@ -41,7 +41,7 @@ case "$1" in
 		    # not sure what other users to whitelist from this
 		    ;;
 		*)
-		    target=/etc/parental-control/users.d/${USERNAME}
+		    target=/etc/parental-time-curb/users.d/${USERNAME}
 		    [ -f ${target} ] || cp -v ${source} ${target}
 		    ;;
 	    esac

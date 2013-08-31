@@ -16,19 +16,19 @@ System Paths Used
 -------------------------
 
 # crontab for tracking
-/etc/cron.d/parental-control
+/etc/cron.d/parental-time-curb
 
 # users.d for configuring users
-/etc/parental-control/users.d
+/etc/parental-time-curb/users.d
 
 # example configuration file
-/usr/share/parental-control/example.user.conf
+/usr/share/parental-time-curb/example.user.conf
 
 # worker scripts
-/usr/lib/parental-control
+/usr/lib/parental-time-curb
 
 # accounting data
-/var/lib/parental-control
+/var/lib/parental-time-curb
 
 # logging
-/var/log/parental-control.log
+/var/log/parental-time-curb.log

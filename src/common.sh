@@ -7,9 +7,9 @@ function write_log () {
     STAMP=$(date +"%F %H:%M:%S" | perl -pe 's/\n//')
     if [ ${DRY_RUN} -eq 1 ]
     then
-	echo "[${STAMP}] $1" | tee -a /var/log/parental-control.log
+	echo "[${STAMP}] $1" | tee -a /var/log/parental-time-curb.log
     else
-	echo "[${STAMP}] $1" >> /var/log/parental-control.log
+	echo "[${STAMP}] $1" >> /var/log/parental-time-curb.log
     fi
 }
 
@@ -22,7 +22,7 @@ function is_logged_in () {
 
 function is_enabled () {
     check_enabled() (
-        [ -f /etc/default/parental-control ] && . /etc/default/parental-control
+        [ -f /etc/default/parental-time-curb ] && . /etc/default/parental-time-curb
         [ "$ENABLED" == "1" ] && return 0
         return 1
     )
@@ -31,7 +31,7 @@ function is_enabled () {
 
 function get_current_daily_total () {
     user=$1
-    daily_total_file=/var/lib/parental-control/${user}.daily_total
+    daily_total_file=/var/lib/parental-time-curb/${user}.daily_total
     if [ -f ${daily_total_file} ]
     then
         echo -n $(cat ${daily_total_file} | perl -pe 's/\n//')
@@ -43,7 +43,7 @@ function get_current_daily_total () {
 function set_current_daily_total () {
     user=$1
     value=$2
-    daily_total_file=/var/lib/parental-control/${user}.daily_total
+    daily_total_file=/var/lib/parental-time-curb/${user}.daily_total
     echo "${value}" > ${daily_total_file}
 }
 

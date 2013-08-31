@@ -5,7 +5,7 @@ There are other open source projects in various stages of development and
 none of which cover the requirements I have.
 
 In order to use this system right now, manual editing of the configuration
-files are required. Simply edit the files in /etc/parental-control/users.d
+files are required. Simply edit the files in /etc/parental-time-curb/users.d
 and set ENABLE to 1 in order to start tracking (and limiting) that user's
 time on the computer. There are comments in the configuration files which
 should be enough to get by "for now".

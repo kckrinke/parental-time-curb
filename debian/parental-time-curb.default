@@ -1,0 +1,2 @@
+# To enable the parental-time-curb, set ENABLED to 1
+ENABLED=0

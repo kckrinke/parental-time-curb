@@ -1,5 +1,5 @@
 #!/bin/sh
-# postrm script for parental-control
+# postrm script for parental-time-curb
 #
 # see: dh_installdeb(1)
 
@@ -23,8 +23,8 @@ case "$1" in
     upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|remove)
     ;;
     purge)
-	[ -f /var/log/parental-control.log ] && rm -f /var/log/parental-control.log
-	rm -f /etc/parental-control/users.d/*
+	[ -f /var/log/parental-time-curb.log ] && rm -f /var/log/parental-time-curb.log
+	rm -f /etc/parental-time-curb/users.d/*
     ;;
 
     *)
