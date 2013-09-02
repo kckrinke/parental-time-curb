@@ -1,0 +1,35 @@
+#!/bin/bash
+TARGET=$1
+[ -f $TARGET ] || exit
+
+function check_update () {
+    VARNAME=$1
+    DEFAULT=$2
+    DESC=$3
+    grep -q "${VARNAME}" ${TARGET}
+    if [ $? -ne 0 ]
+    then
+        echo "# ${DESC}" >> ${TARGET}
+        echo "${VARNAME}=${DEFAULT}" >> ${TARGET}
+    fi
+}
+
+#
+# New 0.2.0
+#
+
+check_update "FRIDAY_NIGHT_IS_WEEKEND" 0 "Are Friday nights considered weekends?"
+check_update "SUNDAY_NIGHT_IS_WEEKNIGHT" 0 "Are Sunday nights considered weeknights?"
+
+#
+# ORIGINAL 0.1.0
+#
+
+# ENABLED=0
+# SKIP_WEEKENDS=1
+# DAILY_MAX=90
+# DAILY_OPEN_HOUR=8
+# DAILY_OPEN_MINUTE=0
+# DAILY_CLOSE_HOUR=21
+# DAILY_CLOSE_MINUTE=30
+
