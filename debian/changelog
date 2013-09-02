@@ -1,3 +1,10 @@
+parental-time-curb (0.1.2-1) precise; urgency=low
+
+  * Variablized system paths (code cleanup)
+  * Implemented daily bonus minutes reward system
+
+ -- Kevin C. Krinke <kevin@krinke.ca>  Mon, 02 Sep 2013 13:01:23 -0400
+
 parental-time-curb (0.1.1-1) precise; urgency=low
 
   * Added new user config variables
