@@ -3,13 +3,21 @@
 # Common Functions
 #
 
+USR_LIB_DIR=/usr/lib/parental-time-curb
+VAR_LIB_DIR=/var/lib/parental-time-curb
+ETC_USR_DIR=/etc/parental-time-curb/users.d
+VAR_LOG_FILE=/var/log/parental-time-curb.log
+ETC_DEF_FILE=/etc/default/parental-time-curb
+export USR_LIB_DIR VAR_LIB_DIR ETC_USR_DIR VAR_LOG_FILE ETC_DEF_FILE
+
 ENABLED=0
 LOG_LEVEL=0
 NO_ACTIONS=0
 
-[ -f /etc/default/parental-time-curb ] && . /etc/default/parental-time-curb
+[ -f ${ETC_DEF_FILE} ] && . ${ETC_DEF_FILE}
 [ $DRY_RUN -eq 1 -a $NO_ACTIONS -eq 0 ] && NO_ACTIONS=1
 IS_ENABLED=$ENABLED
+unset ENABLED
 export IS_ENABLED LOG_LEVEL NO_ACTIONS
 
 export LOG_NORMAL=0
@@ -22,15 +30,16 @@ function write_log () {
     STAMP=$(date +"%F %H:%M:%S" | perl -pe 's/\n//')
     if [ ${NO_ACTIONS} -eq 1 ]
     then
-	    echo "[${STAMP}] $MESSAGE" | tee -a /var/log/parental-time-curb.log
+	    echo "[${STAMP}] $MESSAGE" | tee -a ${VAR_LOG_FILE}
     else
-	    echo "[${STAMP}] $MESSAGE" >> /var/log/parental-time-curb.log
+	    echo "[${STAMP}] $MESSAGE" >> ${VAR_LOG_FILE}
     fi
 }
 
 function log_normal () {
     write_log $LOG_NORMAL "$1"
 }
+
 function log_verbose () {
     write_log $LOG_VERBOSE "$1"
 }
@@ -49,7 +58,7 @@ function is_enabled () {
 
 function get_current_daily_total () {
     user=$1
-    daily_total_file=/var/lib/parental-time-curb/${user}.daily_total
+    daily_total_file=${VAR_LIB_DIR}/${user}.daily_total
     if [ -f ${daily_total_file} ]
     then
         echo -n $(cat ${daily_total_file} | perl -pe 's/\n//')
@@ -61,7 +70,7 @@ function get_current_daily_total () {
 function set_current_daily_total () {
     user=$1
     value=$2
-    daily_total_file=/var/lib/parental-time-curb/${user}.daily_total
+    daily_total_file=${VAR_LIB_DIR}/${user}.daily_total
     echo "${value}" > ${daily_total_file}
 }
 

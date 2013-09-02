@@ -23,7 +23,7 @@ fi
 #       else give notification
 
 log_verbose "tracker run started"
-for user_name in $(/bin/ls /etc/parental-time-curb/users.d | egrep -v '~$')
+for user_name in $(/bin/ls ${ETC_USR_DIR} | egrep -v '~$')
 do
     (
         # User setting defaults
@@ -38,7 +38,7 @@ do
         DAILY_CLOSE_MINUTE=30
 
         # load user settings
-        user_conf=/etc/parental-time-curb/users.d/${user_name}
+        user_conf=${ETC_USR_DIR}/${user_name}
         . ${user_conf}
 
         log_verbose "  validating user: ${user_name}"
@@ -85,7 +85,7 @@ do
             #
             #: Check timestamps and reset counters
             #
-            daily_total_file=/var/lib/parental-time-curb/${user_name}.daily_total
+            daily_total_file=${VAR_LIB_DIR}/${user_name}.daily_total
             file_day=$(date -r ${daily_total_file} +%d)
             today=$(date +%d)
             if [ -f $daily_total_file -a $file_day -ne $today ]
