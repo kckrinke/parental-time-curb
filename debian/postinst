@@ -20,41 +20,50 @@ set -e
 
 case "$1" in
     configure)
-	# make sure that the tracker script is executable
-	chmod 700 /usr/lib/parental-time-curb
-	chmod 440 /usr/lib/parental-time-curb/common.sh
-	chmod 550 /usr/lib/parental-time-curb/tracker
-	# make sure that the conf dir isn't readable except to root
-	chmod 700 /etc/parental-time-curb
-	chown root.root /etc/parental-time-curb
-	# make sure that the var lib dir isn't readable except to root
-	chmod 700 /var/lib/parental-time-curb
-	chown root.root /var/lib/parental-time-curb
-	# for each user above 1000, copy an example config into place
-	# note that the example config isn't active for any user until
-	# it is explicitly edited and has ENABLE set to "1"
-	source=/usr/share/parental-time-curb/example.user.conf
-	awk -F: '$3 >= 1000 {print $1}' /etc/passwd | while read USERNAME
-	do
-	    case $USERNAME in
-		nobody|postgres)
-		    # not sure what other users to whitelist from this
-		    ;;
-		*)
-		    target=/etc/parental-time-curb/users.d/${USERNAME}
-		    [ -f ${target} ] || cp -v ${source} ${target}
-		    ;;
-	    esac
-	done
-    ;;
+        # make sure that the tracker script is executable
+        chmod 700 /usr/lib/parental-time-curb
+        chmod 440 /usr/lib/parental-time-curb/common.sh
+        chmod 550 /usr/lib/parental-time-curb/tracker
+        chmod 550 /usr/lib/parental-time-curb/upgrade-user-conf
+        # make sure that the conf dir isn't readable except to root
+        chmod 700 /etc/parental-time-curb
+        chown root.root /etc/parental-time-curb
+        # make sure that the var lib dir isn't readable except to root
+        chmod 700 /var/lib/parental-time-curb
+        chown root.root /var/lib/parental-time-curb
+        # for each user above 1000, copy an example config into place
+        # note that the example config isn't active for any user until
+        # it is explicitly edited and has ENABLE set to "1"
+        source=/usr/share/parental-time-curb/example.user.conf
+        awk -F: '$3 >= 1000 {print $1}' /etc/passwd | while read USERNAME
+        do
+            case $USERNAME in
+                nobody|postgres)
+                    # not sure what other users to whitelist from this
+                    ;;
+                *)
+                    target=/etc/parental-time-curb/users.d/${USERNAME}
+                    if [ -f ${target} ]
+                    then
+                        # config file exists, let's look for missing variables?
+                        /usr/lib/parental-time-curb/upgrade-user-conf ${target}
+                        echo "Upgraded config for user: ${USERNAME}"
+                    else
+                        cp ${source} ${target}
+                        echo "Added default config for user: ${USERNAME}"
+                    fi
+                    ;;
+            esac
+        done
+        ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
+        ;;
 
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1
-    ;;
+        ;;
 esac
 
 # dh_installdeb will replace this with shell code automatically

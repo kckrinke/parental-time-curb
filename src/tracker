@@ -8,7 +8,7 @@ export DRY_RUN=0
 is_enabled
 if [ $? -ne 0 ]
 then
-    write_log "Not enabled"
+    log_verbose "Not enabled"
     exit 0
 fi
 
@@ -22,126 +22,159 @@ fi
 #       if so, fire off worker process
 #       else give notification
 
-write_log "tracker run started"
+log_verbose "tracker run started"
 for user_name in $(/bin/ls /etc/parental-time-curb/users.d | egrep -v '~$')
 do
     (
+        # User setting defaults
+        ENABLED=0
+        SKIP_WEEKENDS=1
+        FRIDAY_NIGHT_IS_WEEKEND=0
+        SUNDAY_NIGHT_IS_WEEKNIGHT=0
+        DAILY_MAX=90
+        DAILY_OPEN_HOUR=8
+        DAILY_OPEN_MINUTE=0
+        DAILY_CLOSE_HOUR=21
+        DAILY_CLOSE_MINUTE=30
+
+        # load user settings
         user_conf=/etc/parental-time-curb/users.d/${user_name}
         . ${user_conf}
+
+        log_verbose "  validating user: ${user_name}"
         if [ "$ENABLED" == "1" ]
         then
-            write_log "  validating user: ${user_name}"
-	    #
-	    #: Weekender Checks
-	    #
+            log_verbose "    user is being tracked"
+
+            #
+            #: Time/Date Values
+            #
+            this_hour=$(date +%H)
+            this_minute=$(date +%M)
+            close_minutes=$(expr $DAILY_CLOSE_HOUR \* 60 + $DAILY_CLOSE_MINUTE)
+            these_minutes=$(expr $this_hour \* 60 + $this_minute)
+            close_delta=$(expr $close_minutes - $these_minutes)
+            day_of_week=$(date +%u)
+
+            #
+            #: Weekender Checks
+            #
             if [ "${SKIP_WEEKENDS}" == "1" ]
             then
-                day_of_week=$(date +%u)
-                if [ $day_of_week -eq 6 -o $day_of_week -eq 7 ]
+                if [ $day_of_week -eq 6 ]
                 then
-                    echo "    weekends permitted. skipping."
+                    log_verbose "    saturday permitted. skipping."
                     exit 0
+                elif [ $day_of_week -eq 7 ]
+                then
+                    if [ $SUNDAY_NIGHT_IS_WEEKNIGHT -eq 0 ]
+                    then
+                        log_verbose "    sunday permitted. skipping."
+                        exit 0
+                    fi
+                elif [ $day_of_week -eq 5 -a $FRIDAY_NIGHT_IS_WEEKEND -eq 1 ]
+                then
+                    if [ $these_minutes -ge $(expr $close_minutes - 30) ]
+                    then
+                        log_verbose "    friday night permitted. skipping."
+                        exit 0
+                    fi
                 fi
             fi
 
-	    #
-	    #: Check timestamps and reset counters
-	    #
-	    daily_total_file=/var/lib/parental-time-curb/${user_name}.daily_total
-	    file_day=$(date -r ${daily_total_file} +%d)
-	    today=$(date +%d)
-	    if [ $file_day -ne $today ]
-	    then
-		write_log "    daily_total file is due for reset: ${file_day} ne ${today}"
-		echo -n 0 > ${daily_total_file}
-	    fi
+            #
+            #: Check timestamps and reset counters
+            #
+            daily_total_file=/var/lib/parental-time-curb/${user_name}.daily_total
+            file_day=$(date -r ${daily_total_file} +%d)
+            today=$(date +%d)
+            if [ -f $daily_total_file -a $file_day -ne $today ]
+            then
+                log_verbose "    daily_total file is due for reset: ${file_day} ne ${today}"
+                echo -n 0 > ${daily_total_file}
+            fi
 
-	    #
-	    #: Is the user logged in?
-	    #
-	    LOGGED_IN=0
+            #
+            #: Is the user logged in?
+            #
+            LOGGED_IN=0
             is_logged_in ${user_name}
             if [ $? -eq 0 ]
             then
-                write_log "    ${user_name} is currently logged in"
+                log_verbose "    ${user_name} is currently logged in"
                 inc_current_daily_total ${user_name}
-		LOGGED_IN=1
+                LOGGED_IN=1
             else
-                write_log "    ${user_name} is currently NOT logged in"
+                log_verbose "    ${user_name} is currently NOT logged in"
             fi
 
-	    #
-	    #: Document Some Stats
-	    #
+            #
+            #: Document Some Stats
+            #
             daily_total=$(get_current_daily_total ${user_name})
-            write_log "    current daily total: ${daily_total}"
-            write_log "    config daily max: ${DAILY_MAX}"
-            write_log "    daily window open: ${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}"
-            write_log "    daily window close: ${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}"
+            daily_delta=$(expr $DAILY_MAX - $daily_total)
+            log_verbose "    current daily total: ${daily_total}"
+            log_verbose "    config daily max: ${DAILY_MAX}"
+            log_verbose "    daily window open: ${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}"
+            log_verbose "    daily window close: ${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}"
+            log_verbose "    daily delta: $DAILY_MAX - $daily_total = ${daily_delta}"
 
-	    #
-	    #: Daily Limits
-	    #
+            #
+            #: Daily Limits
+            #
             if [ $daily_total -gt $DAILY_MAX ]
             then
-                write_log "    daily limit exceded! lock and slay."
+                log_verbose "    daily limit exceded! lock and slay."
                 lock_and_slay ${user_name}
             else
-                write_log "    within daily limits"
-                this_hour=$(date +%H)
-                this_minute=$(date +%M)
+                log_verbose "    within daily limits"
                 if [ $this_hour -gt $DAILY_OPEN_HOUR ] || [ $this_hour -eq $DAILY_OPEN_HOUR -a $this_minute -ge $DAILY_OPEN_MINUTE ]
                 then
-		    if [ $this_hour -lt $DAILY_CLOSE_HOUR ] || [ $this_hour -eq $DAILY_CLOSE_HOUR -a $this_minute -le $DAILY_CLOSE_MINUTE ]
-		    then
-                        write_log "    user is within allowed daily window"
+                    if [ $this_hour -lt $DAILY_CLOSE_HOUR ] || [ $this_hour -eq $DAILY_CLOSE_HOUR -a $this_minute -le $DAILY_CLOSE_MINUTE ]
+                    then
+                        log_verbose "    user is within allowed daily window"
                         unlock_user ${user_name}
-			write_log "      checking for reminders..."
-			daily_delta=$(expr $DAILY_MAX - $daily_total)
-			write_log "      daily_delta: $DAILY_MAX - $daily_total = ${daily_delta}"
-			case "$daily_delta" in
-			    "30"|"20"|"10")
-				write_log "        info daily_delta: ${daily_delta}"
-				notify_user_info ${user} "Tick Tock..." \
-				    "You have ${daily_delta} minutes left on your daily computer limit..."
-				;;
-			    "5"|"2")
-				write_log "        warn daily_delta: ${daily_delta}"
-				notify_user_warn ${user} "Tough Bananas :)" \
-				    "You have ${daily_delta} minutes left on your daily computer limit... Save your game/files/whatever ASAP :D"
-				;;
-			esac
-			close_minutes=$(expr $DAILY_CLOSE_HOUR \* 60 + $DAILY_CLOSE_MINUTE)
-			these_minutes=$(expr $this_hour \* 60 + $this_minute)
-			close_delta=$(expr $close_minutes - $these_minutes)
-			write_log "      close_delta: $close_minutes - $these_minutes = ${close_delta}"
-			case "$close_delta" in
-			    "30"|"20"|"10")
-				write_log "        info close_delta: ${close_delta}"
-				notify_user_info ${user} "Getting Close..." \
-				    "Your computer curfew is in ${close_delta} minutes..."
-				;;
-			    "5"|"2")
-				write_log "        warn close_delta: ${close_delta}"
-				notify_user_warn ${user} "Curfew Time..." \
-				    "Your computer curfew is in ${close_delta} minutes... Save your game/files/whatever ASAP :D"
-				;;
-			esac
-		    else
-                        write_log "    past allowed window, lock and slay"
+                        log_verbose "    checking for reminders..."
+                        case "$daily_delta" in
+                            "180"|"120"|"60"|"30"|"20"|"10")
+                                log_verbose "        info daily_delta: ${daily_delta}"
+                                notify_user_info ${user} "Tick Tock..." \
+                                    "You have ${daily_delta} minutes left on your daily computer limit..."
+                                ;;
+                            "5"|"2")
+                                log_verbose "        warn daily_delta: ${daily_delta}"
+                                notify_user_warn ${user} "Tough Bananas :)" \
+                                    "You have ${daily_delta} minutes left on your daily computer limit... Save your game/files/whatever ASAP :D"
+                                ;;
+                        esac
+                        log_verbose "      close_delta: $close_minutes - $these_minutes = ${close_delta}"
+                        case "$close_delta" in
+                            "30"|"20"|"10")
+                                log_verbose "        info close_delta: ${close_delta}"
+                                notify_user_info ${user} "Getting Close..." \
+                                    "Your computer curfew is in ${close_delta} minutes..."
+                                ;;
+                            "5"|"2")
+                                log_verbose "        warn close_delta: ${close_delta}"
+                                notify_user_warn ${user} "Curfew Time..." \
+                                    "Your computer curfew is in ${close_delta} minutes... Save your game/files/whatever ASAP :D"
+                                ;;
+                        esac
+                    else
+                        log_verbose "    past allowed window, lock and slay"
                         lock_and_slay ${user_name}
-		    fi
+                    fi
                 else
-                    write_log "    before allowed window, lock and slay"
+                    log_verbose "    before allowed window, lock and slay"
                     lock_and_slay ${user_name}
                 fi
             fi
         else
-            write_log "  skipping user: ${user_name} (tracking disabled)"
+            log_verbose "    tracking disabled for user"
             unlock_user ${user_name}
         fi
     )
 done
-write_log "tracker run ended"
+log_verbose "tracker run ended"
 
 exit 0

@@ -3,14 +3,36 @@
 # Common Functions
 #
 
+ENABLED=0
+LOG_LEVEL=0
+NO_ACTIONS=0
+
+[ -f /etc/default/parental-time-curb ] && . /etc/default/parental-time-curb
+[ $DRY_RUN -eq 1 -a $NO_ACTIONS -eq 0 ] && NO_ACTIONS=1
+IS_ENABLED=$ENABLED
+export IS_ENABLED LOG_LEVEL NO_ACTIONS
+
+export LOG_NORMAL=0
+export LOG_VERBOSE=0
+
 function write_log () {
+    LEVEL=$1
+    MESSAGE=$2
+    [ $LEVEL -gt $LOG_LEVEL ] && return
     STAMP=$(date +"%F %H:%M:%S" | perl -pe 's/\n//')
-    if [ ${DRY_RUN} -eq 1 ]
+    if [ ${NO_ACTIONS} -eq 1 ]
     then
-	echo "[${STAMP}] $1" | tee -a /var/log/parental-time-curb.log
+	    echo "[${STAMP}] $MESSAGE" | tee -a /var/log/parental-time-curb.log
     else
-	echo "[${STAMP}] $1" >> /var/log/parental-time-curb.log
+	    echo "[${STAMP}] $MESSAGE" >> /var/log/parental-time-curb.log
     fi
+}
+
+function log_normal () {
+    write_log $LOG_NORMAL "$1"
+}
+function log_verbose () {
+    write_log $LOG_VERBOSE "$1"
 }
 
 function is_logged_in () {
@@ -21,12 +43,8 @@ function is_logged_in () {
 }
 
 function is_enabled () {
-    check_enabled() (
-        [ -f /etc/default/parental-time-curb ] && . /etc/default/parental-time-curb
-        [ "$ENABLED" == "1" ] && return 0
-        return 1
-    )
-    return $(check_enabled)
+    [ "$IS_ENABLED" == "1" ] && return 0
+    return 1
 }
 
 function get_current_daily_total () {
@@ -67,8 +85,8 @@ function lock_user () {
     is_user_locked ${user}
     if [ $? -ne 0 ]
     then
-        write_log "[ACTION] LOCKING USER: ${user}"
-        [ ${DRY_RUN} -eq 1 ] || passwd --lock ${user} 2>&1 > /dev/null
+        log_normal "[ACTION] LOCKING USER: ${user}"
+        [ ${NO_ACTIONS} -eq 1 ] || passwd --lock ${user} 2>&1 > /dev/null
     fi
 }
 
@@ -77,8 +95,8 @@ function unlock_user () {
     is_user_locked ${user}
     if [ $? -eq 0 ]
     then
-        write_log "[ACTION] UNLOCKING USER: ${user}"
-        [ ${DRY_RUN} -eq 1 ] || passwd --unlock ${user} 2>&1 > /dev/null
+        log_normal "[ACTION] UNLOCKING USER: ${user}"
+        [ ${NO_ACTIONS} -eq 1 ] || passwd --unlock ${user} 2>&1 > /dev/null
     fi
 }
 
@@ -86,8 +104,8 @@ function slay_user () {
     user=$1
     notify_user_error ${user} "The Dragon..." "... is about to be slain. C-YA"
     sleep 2
-    write_log "[ACTION] SLAYING USER: ${user}"
-    [ ${DRY_RUN} -eq 1 ] || slay ${user} 2>&1 > /dev/null
+    log_normal "[ACTION] SLAYING USER: ${user}"
+    [ ${NO_ACTIONS} -eq 1 ] || slay ${user} 2>&1 > /dev/null
 }
 
 function lock_and_slay () {

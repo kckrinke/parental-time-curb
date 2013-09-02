@@ -1,2 +1,8 @@
 # To enable the parental-time-curb, set ENABLED to 1
 ENABLED=0
+
+# Do not actually perform any actions, just track and "test"
+NO_ACTIONS=0
+
+# Set logging level, 0 = just the basics, 1 = everything
+LOG_LEVEL=0

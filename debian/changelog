@@ -1,4 +1,21 @@
-parental-time-curb (0.1.0-1) unstable; urgency=low
+parental-time-curb (0.1.1-1) precise; urgency=low
+
+  * Added new user config variables
+  * Added config migration script for postinst
+  * Added logging levels (0=normal,1=verbose)
+  * Reminders at 2hr and 1hr marks for daily max limits
+  * Global defaults has new NO_ACTIONS flag for dry-run testing
+  * Sane handling of defaults for broken user configs
+
+ -- Kevin C. Krinke <kevin@krinke.ca>  Mon, 02 Sep 2013 00:32:27 -0400
+
+parental-time-curb (0.1.0-2) precise; urgency=low
+
+  * Version bump, trying to get PPA uploads working.
+
+ -- Kevin C. Krinke <kevin@krinke.ca>  Thu, 29 Aug 2013 22:31:15 -0400
+    
+parental-time-curb (0.1.0-1) precise; urgency=low
 
   * Initial release
 
