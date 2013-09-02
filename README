@@ -13,3 +13,8 @@ should be enough to get by "for now".
 There will at some point be an administrative interface to configure these
 things properly without needing to manually adjust anything. But we're not
 there yet.
+
+You can get the latest builds from the launchpad repo:
+
+ sudo apt-add-repository ppa:onest8/ppa
+ sudo apt-get update && sudo apt-get install parental-time-curb
