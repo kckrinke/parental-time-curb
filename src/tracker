@@ -112,17 +112,31 @@ do
             #: Document Some Stats
             #
             daily_total=$(get_current_daily_total ${user_name})
-            daily_delta=$(expr $DAILY_MAX - $daily_total)
+            today_bonus=0
+            today_bonus_file=${VAR_LIB_DIR}/${user_name}.today_bonus
+            if [ -f ${today_bonus_file} ]
+            then
+                today_bonus_day=$(date -r ${today_bonus_file} +%d)
+                if [ ${today_bonus_day} -ne ${today} ]
+                then
+                    echo 0 > ${today_bonus_file}
+                fi
+                today_bonus=$(cat ${today_bonus_file} | perl -pe 's/\n//')
+            fi
+            TOTAL_DAILY_MAX=$(expr ${DAILY_MAX} + ${today_bonus})
+            daily_delta=$(expr ${TOTAL_DAILY_MAX} - ${daily_total})
             log_verbose "    current daily total: ${daily_total}"
+            log_verbose "    current daily bonus: ${today_bonus}"
             log_verbose "    config daily max: ${DAILY_MAX}"
+            log_verbose "    total daily max: ${TOTAL_DAILY_MAX}"
             log_verbose "    daily window open: ${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}"
             log_verbose "    daily window close: ${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}"
-            log_verbose "    daily delta: $DAILY_MAX - $daily_total = ${daily_delta}"
+            log_verbose "    daily delta: ${TOTAL_DAILY_MAX} - ${daily_total} = ${daily_delta}"
 
             #
             #: Daily Limits
             #
-            if [ $daily_total -gt $DAILY_MAX ]
+            if [ $daily_total -gt $TOTAL_DAILY_MAX ]
             then
                 log_verbose "    daily limit exceded! lock and slay."
                 lock_and_slay ${user_name}
