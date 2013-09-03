@@ -21,10 +21,12 @@ set -e
 case "$1" in
     configure)
         # make sure that the tracker script is executable
-        chmod 700 /usr/lib/parental-time-curb
+        chmod 750 /usr/lib/parental-time-curb
         chmod 440 /usr/lib/parental-time-curb/common.sh
         chmod 550 /usr/lib/parental-time-curb/tracker
         chmod 550 /usr/lib/parental-time-curb/upgrade-user-conf
+        chmod 550 /usr/bin/time-curb-admin
+        chown root.root /usr/bin/time-curb-admin
         # make sure that the conf dir isn't readable except to root
         chmod 700 /etc/parental-time-curb
         chown root.root /etc/parental-time-curb
@@ -47,7 +49,7 @@ case "$1" in
                     then
                         # config file exists, let's look for missing variables?
                         /usr/lib/parental-time-curb/upgrade-user-conf ${target}
-                        echo "Upgraded config for user: ${USERNAME}"
+                        echo "Updated config for user: ${USERNAME}"
                     else
                         cp ${source} ${target}
                         echo "Added default config for user: ${USERNAME}"
