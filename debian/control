@@ -10,7 +10,7 @@ Homepage: https://github.com/kckrinke/parental-time-curb
 
 Package: parental-time-curb
 Architecture: all
-Depends: ${misc:Depends}, slay, coreutils, libnotify-bin, bash, cron, perl, procps, passwd, sudo, libui-dialog-perl, dialog
+Depends: ${misc:Depends}, slay, coreutils, libnotify-bin, bash, cron, perl, procps, passwd, sudo, libui-dialog-perl, dialog, libfile-slurp-perl
 Description: Limit the amount of time a user can be on the computer.
  Parents can set how many minutes per day a user account can be logged in.
  Parents set up "start" and "end" times and users can spend their daily
