@@ -1,4 +1,4 @@
-Parental Control
+Parental Time Curb
 -------------------------
 
 There are other open source projects in various stages of development and
@@ -10,11 +10,38 @@ and set ENABLE to 1 in order to start tracking (and limiting) that user's
 time on the computer. There are comments in the configuration files which
 should be enough to get by "for now".
 
-There will at some point be an administrative interface to configure these
-things properly without needing to manually adjust anything. But we're not
-there yet.
+There is now an admin UI, though it's strictly a terminal-based interface.
+To run the admin tool, login with an account that has sudo privileges and
+type the following in a terminal:
 
-You can get the latest builds from the launchpad repo:
+ sudo time-curb-admin
+
+Note that it won't tab-complete in a bash shell. This is done on purpose
+in order for there to be a tightened sense of obscurity. Normal users
+cannot even read the perl-based admin script (yes, it's free software
+and they can just check out the entire project but that's beyond the
+point).
+
+Using the admin tool you can manage the global settings, each user's
+settings and manage the user's state (add reward minutes). If you add
+a new user account, simple reconfigure the debian package to have a
+default config created for them using the following command:
+
+ sudo dpkg-reconfigure parental-time-curb
+
+You can get the latest debian packages from the launchpad repo for Ubuntu
+Precise Pangolin:
 
  sudo apt-add-repository ppa:onest8/ppa
  sudo apt-get update && sudo apt-get install parental-time-curb
+
+For Debian Wheezy, you'll need to manually add the repo (I've had
+problems with Debian's apt-add-repository command):
+
+ echo "deb http://ppa.launchpad.net/onest8/ppa/ubuntu precise main" | \
+   sudo tee /etc/apt/sources.list.d/onest8-ppa-precise.list > /dev/null
+ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 851662D2
+ sudo apt-get update && sudo apt-get install parental-time-curb
+
+If you have any questions, comments, concerns, feature requrests or just
+want to say hi; feel free to email me at kevin AT krinke DOT ca.
