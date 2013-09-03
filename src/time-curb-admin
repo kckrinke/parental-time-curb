@@ -1,0 +1,439 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use diagnostics;
+use File::Slurp;
+use UI::Dialog::Backend::CDialog;
+use Data::Dumper;
+
+our $VERSION = '0.1.2';
+
+use constant { TRUE => 1, FALSE => 0, RV_NORMAL => 0, RV_ERROR => 1 };
+use constant { ETC_DEFAULT => '/etc/default/parental-time-curb',
+                ETC_USR_DIR => '/etc/parental-time-curb/users.d',
+                 VAR_LIB_DIR => '/var/lib/parental-time-curb',
+                  USR_LIB_DIR => '/usr/lib/parental-time-curb',
+              };
+
+our $GLOBAL_SETTINGS =
+ {
+  ENABLED => { default => "0", type => 'bool',
+               desc => "Enable (or disable) Time Curb.",
+             },
+  NO_ACTIONS => { default => "0", type => 'bool',
+                  desc => "Don't actually lock/unlock/slay users.",
+                },
+  LOG_LEVEL => { default => "0", type => 'list',
+                 options => [ "n0", "Normal",
+                              "n1", "Verbose",
+                            ],
+                 desc => "Log just actions or everything.",
+               },
+ };
+our $USER_SETTINGS =
+ {
+  ENABLED => { default => "0", type => 'bool',
+               desc => "Track (Time-Curb) this user.",
+             },
+  SKIP_WEEKENDS => { default => "1", type => 'bool',
+                     desc => "Skip Time-Curb on weekends for this user.",
+                   },
+  FRIDAY_NIGHT_IS_WEEKEND => { default => "1", type => 'bool',
+                               desc => "Ignore Friday curfew if SKIP_WEEKENDS.",
+                             },
+  SUNDAY_NIGHT_IS_WEEKNIGHT => { default => "1", type => 'bool',
+                                 desc => "Honor Sunday curfew if SKIP_WEEKENDS.",
+                               },
+  DAILY_MAX => { default => "90", type => 'int',
+                 desc => "Number of minutes allowed per day.",
+               },
+  DAILY_OPEN_HOUR => { default => "8", type => 'hour',
+                       desc => "Opening hour of the day.",
+                     },
+  DAILY_OPEN_MINUTE => { default => "0", type => 'minute',
+                         desc => "Minute of the opening hour.",
+                       },
+  DAILY_CLOSE_HOUR => { default => "21", type => 'hour',
+                        desc => "Closing hour of the day.",
+                      },
+  DAILY_CLOSE_MINUTE => { default => "30", type => 'minute',
+                          desc => "Minute of the closing hour.",
+                        },
+ };
+
+check_perms();
+
+our $DIALOG =
+ new UI::Dialog::Backend::CDialog
+ (
+  backtitle => "Parental Time Curb Admin (ver. ${VERSION})",
+  width => 72,
+  height => 22,
+  listheight => 10,
+ );
+
+exit(main_menu());
+
+#
+#: PROGRAM LOGIC FUNCTIONS
+#
+
+sub exit_with_err {
+    foreach my $line (@_) {
+        print STDERR $line."\n";
+    }
+    exit RV_ERROR;
+}
+
+sub check_perms {
+    my @errors = ();
+    # can we read/write etc default?
+    push(@errors,"Missing read/write permissions to: ".ETC_DEFAULT)
+     unless -r ETC_DEFAULT && -w ETC_DEFAULT;
+    # can we read/write files in users.d?
+    push(@errors,"Missing read/write permissions to: ".ETC_USR_DIR)
+     unless -r ETC_USR_DIR && -w ETC_USR_DIR;
+    # can we read/write files in /var/lib?
+    push(@errors,"Missing read/write permissions to: ".VAR_LIB_DIR)
+     unless -r VAR_LIB_DIR && -w VAR_LIB_DIR;
+    if (@errors) {
+        exit_with_err(@errors);
+    }
+}
+
+#
+#: MENU FUNCTIONS
+#
+
+sub main_menu {
+    while (TRUE) {
+        my $selection = $DIALOG->menu
+         (
+          title => "Main Menu",
+          text => "Press cancel, escape or pick Exit to quit.",
+          list =>
+          [
+           '1', 'Global Settings',
+           '2', 'User Settings',
+           '3', 'Manage User State',
+           'Q', 'Exit'
+          ]
+         );
+        if ($DIALOG->state() eq "OK") {
+            if ($selection eq "1") {
+                global_menu();
+            } elsif ($selection eq "2") {
+                select_user(\&user_menu);
+            } elsif ($selection eq "3") {
+                select_user(\&state_menu);
+            } else {
+                return RV_NORMAL;
+            }
+        } else {
+            return RV_NORMAL;
+        }
+    }
+    return RV_NORMAL;
+}
+
+sub global_menu {
+    while (TRUE) {
+        my $vars = fetch_var_hash(ETC_DEFAULT);
+        my $list = get_settings_list($GLOBAL_SETTINGS,$vars);
+        my $selection = $DIALOG->menu
+         (
+          title => "Global Settings",
+          text => "Select a setting to edit, cancel (or esc) to go back to the main menu.",
+          list => $list
+         );
+        if ($DIALOG->state() eq "OK") {
+            my $state = show_setting_menu($selection,$GLOBAL_SETTINGS,$vars);
+            if (defined $state) {
+                update_var_hash(ETC_DEFAULT,$state);
+            }
+        } else {
+            return;
+        }
+    }
+    return;
+}
+
+sub select_user {
+    my ($sub) = @_;
+    while (TRUE) {
+        my @user_names = get_user_list();
+        my @list = ();
+        my $c = 1;
+        foreach my $user_name (@user_names) {
+            push(@list, scalar($c++), $user_name);
+        }
+        my $selection = $DIALOG->menu
+         ( title => "Select a User",
+           text => "Press cancel (or escape) to go back.",
+           list => \@list
+         );
+        if ($DIALOG->state() eq "OK") {
+            my $user_name = $user_names[$selection-1];
+            &$sub($user_name);
+        } else {
+            return;
+        }
+    }
+    return;
+}
+
+sub user_menu {
+    my ($user_name) = @_;
+    while (TRUE) {
+        my $vars = fetch_var_hash(ETC_USR_DIR.'/'.$user_name);
+        my $list = get_settings_list($USER_SETTINGS,$vars);
+        my $selection = $DIALOG->menu
+         (
+          title => "User (${user_name}) Settings",
+          text => "Select a setting to edit, cancel (or esc) to go back to the main menu.",
+          list => $list
+         );
+        if ($DIALOG->state() eq "OK") {
+            my $state = show_setting_menu($selection,$USER_SETTINGS,$vars);
+            if (defined $state) {
+                update_var_hash(ETC_USR_DIR.'/'.$user_name,$state);
+            }
+        } else {
+            return;
+        }
+    }
+    return;
+}
+
+sub state_menu {
+    my ($user_name) = @_;
+  USER_STATE_MENU:
+    my $user_state = get_user_state($user_name);
+    while (TRUE) {
+        my $selection = $DIALOG->menu
+         ( title => "User (${user_name}) State",
+           text => "${user_name} has used ".$user_state->{daily_total}." minutes of their daily allowance and has (hopefully) earned their ".$user_state->{today_bonus}." bonus minutes for the day.",
+           list =>
+           [
+            '1', 'Adjust the bonus minutes for the day?'
+           ]
+         );
+        if ($DIALOG->state() eq "OK") {
+            my $bonus_minutes = $DIALOG->inputbox
+             ( title => "${user_name}",
+               text => "How many bonus minutes should be granted for the day?",
+               entry => scalar($user_state->{today_bonus})
+             );
+            if ($DIALOG->state() eq "OK") {
+                my $max_minutes = (60*24) - 1;
+                if ($bonus_minutes !~ m!^\d+$! || $bonus_minutes < 0 || $bonus_minutes > $max_minutes) {
+                    $DIALOG->msgbox
+                     ( title => "Invalid Input",
+                       text => "Total number of bonus minutes must be within the range of 0-${max_minutes}",
+                     );
+                    goto USER_STATE_MENU;
+                }
+                $user_state->{today_bonus} = scalar($bonus_minutes);
+                set_user_state($user_name,$user_state);
+            }
+        } else {
+            return;
+        }
+    }
+    return;
+}
+
+#
+#: HELPER FUNCTIONS
+#
+
+sub get_user_list {
+    opendir(my $dh, ETC_USR_DIR) or die "Failed to open ".ETC_USR_DIR.": $!";
+    my @user_names = sort grep { !m/^\./ && !m/\~$/ } readdir($dh);
+    closedir($dh);
+    return @user_names;
+}
+
+sub fetch_var_hash {
+    my ($file) = @_;
+    my %rv = ();
+    open(my $in, '<', $file) or exit_with_err( "Failed to open ${file} for reading: $!" );
+    my @lines = grep { m!^\s*(\w+)\=(\w+?)\s*(?:\#.+?)??$! } <$in>;
+    close($in);
+    foreach my $line (@lines) {
+        chomp($line);
+        if ($line =~ m!^\s*(\w+)\=(\w+?)\s*(?:\#.+?)??$!) {
+            $rv{$1} = $2 || "0";
+        }
+    }
+    return \%rv;
+}
+
+sub update_var_hash {
+    my ($file,$hash) = @_;
+    my $raw = read_file($file);
+    foreach my $key (keys %{$hash}) {
+        my $value = scalar($hash->{$key});
+        if ($value eq "" || $value eq " " || $value eq "0") {
+            $raw =~ s!\b\Q${key}\E\=\w+?\b!${key}=\Q0\E!ms;
+        } else {
+            $raw =~ s!\b\Q${key}\E\=\w+?\b!${key}=\Q$value\E!ms;
+        }
+    }
+    write_file($file,$raw);
+}
+
+sub get_settings_list {
+    my ($defaults,$hash) = @_;
+    my @list = ();
+    foreach my $key (sort keys %{$defaults}) {
+        my $def_val = $defaults->{$key}->{'default'};
+        my $cur_val = scalar($hash->{$key});
+        push(@list, scalar($key), "Current: ${cur_val}, Default: ${def_val}");
+    }
+    return \@list;
+}
+
+sub show_setting_menu {
+    my ($key, $defaults, $hash) = @_;
+  SHOW_SETTINGS_MENU:
+    my $type = $defaults->{$key}->{'type'};
+    my $cur_val = scalar($hash->{$key});
+    my $def_val = scalar($defaults->{$key}->{'default'});
+    my $desc = scalar($defaults->{$key}->{'desc'});
+    if ($type eq 'bool') {
+        my $new_val = $DIALOG->radiolist
+         ( title => $key,
+           text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           list =>
+           [
+            "TRUE", [ "(one)", ($cur_val eq "1")?"1":"0" ],
+            "FALSE", [ "(zero)", ($cur_val eq "0")?"1":"0" ],
+           ]
+         );
+        if ($DIALOG->state() eq "OK") {
+            $hash->{$key} = ($new_val eq "TRUE") ? "1" : "0";
+            return $hash;
+        }
+        return undef;
+    } elsif ($type eq 'list') {
+        my $options = $defaults->{$key}->{'options'};
+        my @list = ();
+        for (my $i = 0; $i < @{$options}; $i += 2) {
+            my $t = scalar($options->[$i]);
+            my $l = scalar($options->[$i+1]);
+            if ($t =~ m!^n(\d+)$!) {
+                my $t_val = scalar($1);
+                push(@list,scalar($t),[$l,(scalar($cur_val) eq scalar($t_val))?"1":"0"]);
+            } else {
+                push(@list,scalar($t),[$l,(scalar($cur_val) eq scalar($t))?"1":"0"]);
+            }
+        }
+        my $new_val = $DIALOG->radiolist
+         ( title => $key,
+           text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           list => \@list
+         );
+        if ($DIALOG->state() eq "OK") {
+            if ($new_val =~ m!^n(\d+)$!) {
+                $new_val = scalar($1);
+            }
+            $hash->{$key} = scalar($new_val);
+            return $hash;
+        }
+        return undef;
+    } elsif ($type eq 'int') {
+        my $new_val = $DIALOG->inputbox
+         ( title => $key,
+           text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           entry => scalar($cur_val)
+         );
+        if ($DIALOG->state() eq "OK") {
+            my $max_int = (60 * 24);
+            if ($new_val !~ m!^\d+$! || $new_val < 1 || $new_val > $max_int) {
+                $DIALOG->msgbox
+                 ( title => "Invalid Input",
+                   text => "The value '${new_val}' is not in the range of 1-${max_int}. Try again."
+                 );
+                goto SHOW_SETTINGS_MENU;
+            }
+            $hash->{$key} = scalar($new_val);
+            return $hash;
+        }
+        return undef;
+    } elsif ($type eq 'hour') {
+        my $new_val = $DIALOG->inputbox
+         ( title => $key,
+           text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           entry => scalar($cur_val)
+         );
+        if ($DIALOG->state() eq "OK") {
+            if ($new_val !~ m!^\d+$! || $new_val < 0 || $new_val > 23) {
+                $DIALOG->msgbox
+                 ( title => "Invalid Input",
+                   text => "The value '${new_val}' is not in the range of 0-23. Try again."
+                 );
+                goto SHOW_SETTINGS_MENU;
+            }
+            $hash->{$key} = scalar($new_val);
+            return $hash;
+        }
+        return undef;
+    } elsif ($type eq 'minute') {
+        my $new_val = $DIALOG->inputbox
+         ( title => $key,
+           text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           entry => scalar($cur_val)
+         );
+        if ($DIALOG->state() eq "OK") {
+            if ($new_val !~ m!^\d+$! || $new_val < 0 || $new_val > 59) {
+                $DIALOG->msgbox
+                 ( title => "Invalid Input",
+                   text => "The value '${new_val}' is not in the range of 0-59. Try again."
+                 );
+                goto SHOW_SETTINGS_MENU;
+            }
+            $hash->{$key} = scalar($new_val);
+            return $hash;
+        }
+        return undef;
+    }
+    #: should never get here
+    return undef;
+}
+
+sub get_user_state {
+    my ($user_name) = @_;
+    my $daily_total = 0;
+    my $daily_total_file = VAR_LIB_DIR.'/'.$user_name.'.daily_total';
+    if (-f $daily_total_file) {
+        my $val = read_file($daily_total_file);
+        $val =~ s!^\s*(\d+)\s*$!$1!ms;
+        $daily_total = scalar($val);
+    }
+    my $today_bonus = 0;
+    my $today_bonus_file = VAR_LIB_DIR.'/'.$user_name.'.today_bonus';
+    if (-f $today_bonus_file) {
+        my $val = read_file($today_bonus_file);
+        $val =~ s!^\s*(\d+)\s*$!$1!ms;
+        $today_bonus_file = scalar($val);
+    }
+    return { daily_total => $daily_total,
+             today_bonus => $today_bonus };
+}
+
+sub set_user_state {
+    my ($user_name,$state) = @_;
+    my $daily_total_file = VAR_LIB_DIR.'/'.$user_name.'.daily_total';
+    if (exists $state->{daily_total}) {
+        open(my $fh, "+>", $daily_total_file) or die "Failed to open ${daily_total_file} for writing: $!";
+        print $fh $state->{daily_total};
+        close($fh);
+    }
+    my $today_bonus_file = VAR_LIB_DIR.'/'.$user_name.'.today_bonus';
+    if (exists $state->{today_bonus}) {
+        open(my $fh, "+>", $today_bonus_file) or die "Failed to open ${today_bonus_file} for writing: $!";
+        print $fh $state->{today_bonus};
+        close($fh);
+    }
+}
