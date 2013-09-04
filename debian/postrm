@@ -25,6 +25,7 @@ case "$1" in
     purge)
 	[ -f /var/log/parental-time-curb.log ] && rm -f /var/log/parental-time-curb.log
 	rm -f /etc/parental-time-curb/users.d/*
+    rm -f /etc/apt/sources.list.d/parental-time-curb.list
     ;;
 
     *)

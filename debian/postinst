@@ -57,6 +57,15 @@ case "$1" in
                     ;;
             esac
         done
+        # Add apt repo automatically
+        if [ ! -f /etc/apt/sources.list.d/parental-time-curb.list ]
+        then
+            echo "Adding Parental Time Curb APT Source..."
+            echo "deb http://ppa.launchpad.net/onest8/time-curb/ubuntu precise main" > \
+                /etc/apt/sources.list.d/parental-time-curb.list
+            echo "Adding Parental Time Curb APT Keys..."
+            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 851662D2
+        fi
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
