@@ -13,6 +13,7 @@ use constant { ETC_DEFAULT => '/etc/default/parental-time-curb',
                 ETC_USR_DIR => '/etc/parental-time-curb/users.d',
                  VAR_LIB_DIR => '/var/lib/parental-time-curb',
                   USR_LIB_DIR => '/usr/lib/parental-time-curb',
+                   LOG_FILE => '/var/log/parental-time-curb.log',
               };
 
 our $GLOBAL_SETTINGS =
@@ -120,6 +121,7 @@ sub main_menu {
            '1', 'Global Settings',
            '2', 'User Settings',
            '3', 'Manage User State',
+           '4', 'Watch Logfile',
            'Q', 'Exit'
           ]
          );
@@ -130,6 +132,8 @@ sub main_menu {
                 select_user(\&user_menu);
             } elsif ($selection eq "3") {
                 select_user(\&state_menu);
+            } elsif ($selection eq "4") {
+                watch_log();
             } else {
                 return RV_NORMAL;
             }
@@ -257,6 +261,16 @@ sub state_menu {
         }
     }
     return;
+}
+
+sub watch_log {
+    my ($width,$height) = get_term_size();
+    $DIALOG->tailbox
+     ( title => "Time Curb Log Viewer",
+       width => $width,
+       height => $height,
+       path => LOG_FILE
+     );
 }
 
 #
