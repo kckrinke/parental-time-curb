@@ -32,7 +32,7 @@ default config created for them using the following command:
 During the configuration process, the package will also setup the correct
 APT repository for parental-time-curb along with adding the signing key.
 The below instructions are here for reference purposes however, you just
-need to get the latest (0.1.4 or newer) build and install it to have the
+need to get the latest (0.1.5 or newer) build and install it to have the
 repository autonicely setup for you.
 
 You can get the latest debian packages from the launchpad repo for Ubuntu
