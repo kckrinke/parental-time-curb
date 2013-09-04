@@ -221,8 +221,8 @@ sub user_menu {
 sub state_menu {
     my ($user_name) = @_;
   USER_STATE_MENU:
-    my $user_state = get_user_state($user_name);
     while (TRUE) {
+        my $user_state = get_user_state($user_name);
         my ($width,$height) = get_half_term_size();
         my $selection = $DIALOG->menu
          ( title => "User (${user_name}) State",
