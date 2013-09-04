@@ -5,6 +5,7 @@ use diagnostics;
 use File::Slurp;
 use UI::Dialog::Backend::CDialog;
 use Data::Dumper;
+use Term::Size qw(chars);
 
 our $VERSION = '0.1.2';
 
@@ -107,10 +108,14 @@ sub check_perms {
 
 sub main_menu {
     while (TRUE) {
+        my ($width,$height) = get_half_term_size();
         my $selection = $DIALOG->menu
          (
           title => "Main Menu",
           text => "Press cancel, escape or pick Exit to quit.",
+          width => $width,
+          height => $height,
+          listheight => 5,
           list =>
           [
            '1', 'Global Settings',
@@ -138,12 +143,15 @@ sub main_menu {
 
 sub global_menu {
     while (TRUE) {
+        my ($width,$height) = get_half_term_size();
         my $vars = fetch_var_hash(ETC_DEFAULT);
         my $list = get_settings_list($GLOBAL_SETTINGS,$vars);
         my $selection = $DIALOG->menu
          (
           title => "Global Settings",
           text => "Select a setting to edit, cancel (or esc) to go back to the main menu.",
+          width => $width,
+          height => $height,
           list => $list
          );
         if ($DIALOG->state() eq "OK") {
@@ -161,6 +169,7 @@ sub global_menu {
 sub select_user {
     my ($sub) = @_;
     while (TRUE) {
+        my ($width,$height) = get_half_term_size();
         my @user_names = get_user_list();
         my @list = ();
         my $c = 1;
@@ -170,6 +179,8 @@ sub select_user {
         my $selection = $DIALOG->menu
          ( title => "Select a User",
            text => "Press cancel (or escape) to go back.",
+           width => $width,
+           height => $height,
            list => \@list
          );
         if ($DIALOG->state() eq "OK") {
@@ -185,12 +196,15 @@ sub select_user {
 sub user_menu {
     my ($user_name) = @_;
     while (TRUE) {
+        my ($width,$height) = get_half_term_size();
         my $vars = fetch_var_hash(ETC_USR_DIR.'/'.$user_name);
         my $list = get_settings_list($USER_SETTINGS,$vars);
         my $selection = $DIALOG->menu
          (
           title => "User (${user_name}) Settings",
           text => "Select a setting to edit, cancel (or esc) to go back to the main menu.",
+          width => $width,
+          height => $height,
           list => $list
          );
         if ($DIALOG->state() eq "OK") {
@@ -210,9 +224,12 @@ sub state_menu {
   USER_STATE_MENU:
     my $user_state = get_user_state($user_name);
     while (TRUE) {
+        my ($width,$height) = get_half_term_size();
         my $selection = $DIALOG->menu
          ( title => "User (${user_name}) State",
            text => "${user_name} has used ".$user_state->{daily_total}." minutes of their daily allowance and has (hopefully) earned their ".$user_state->{today_bonus}." bonus minutes for the day.",
+           width => $width,
+           height => $height,
            list =>
            [
             '1', 'Adjust the bonus minutes for the day?'
@@ -246,6 +263,20 @@ sub state_menu {
 #
 #: HELPER FUNCTIONS
 #
+
+sub get_term_size {
+    my ($cols,$rows) = chars();
+    my ($width,$height) = ($cols-4,$rows-6);
+    return ($width, $height);
+}
+
+sub get_half_term_size {
+    my ($width,$height) = get_term_size();
+    ($width,$height) = (sprintf("%.0d",$width/2),sprintf("%.0d",$height/2));
+    $width = 40 unless $width > 40;
+    $height = 20 unless $height > 20;
+    return ($width,$height);
+}
 
 sub get_user_list {
     opendir(my $dh, ETC_USR_DIR) or die "Failed to open ".ETC_USR_DIR.": $!";
@@ -297,6 +328,7 @@ sub get_settings_list {
 sub show_setting_menu {
     my ($key, $defaults, $hash) = @_;
   SHOW_SETTINGS_MENU:
+    my ($width,$height) = get_half_term_size();
     my $type = $defaults->{$key}->{'type'};
     my $cur_val = scalar($hash->{$key});
     my $def_val = scalar($defaults->{$key}->{'default'});
@@ -305,6 +337,8 @@ sub show_setting_menu {
         my $new_val = $DIALOG->radiolist
          ( title => $key,
            text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           width => $width,
+           height => $height,
            list =>
            [
             "TRUE", [ "(one)", ($cur_val eq "1")?"1":"0" ],
@@ -332,6 +366,8 @@ sub show_setting_menu {
         my $new_val = $DIALOG->radiolist
          ( title => $key,
            text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           width => $width,
+           height => $height,
            list => \@list
          );
         if ($DIALOG->state() eq "OK") {
@@ -346,6 +382,8 @@ sub show_setting_menu {
         my $new_val = $DIALOG->inputbox
          ( title => $key,
            text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           width => $width,
+           height => $height,
            entry => scalar($cur_val)
          );
         if ($DIALOG->state() eq "OK") {
@@ -365,6 +403,8 @@ sub show_setting_menu {
         my $new_val = $DIALOG->inputbox
          ( title => $key,
            text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           width => $width,
+           height => $height,
            entry => scalar($cur_val)
          );
         if ($DIALOG->state() eq "OK") {
@@ -383,6 +423,8 @@ sub show_setting_menu {
         my $new_val = $DIALOG->inputbox
          ( title => $key,
            text => $desc." (Current: ${cur_val}, Default: ${def_val})",
+           width => $width,
+           height => $height,
            entry => scalar($cur_val)
          );
         if ($DIALOG->state() eq "OK") {
