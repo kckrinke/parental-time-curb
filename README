@@ -29,18 +29,24 @@ default config created for them using the following command:
 
  sudo dpkg-reconfigure parental-time-curb
 
+During the configuration process, the package will also setup the correct
+APT repository for parental-time-curb along with adding the signing key.
+The below instructions are here for reference purposes however, you just
+need to get the latest (0.1.4 or newer) build and install it to have the
+repository autonicely setup for you.
+
 You can get the latest debian packages from the launchpad repo for Ubuntu
 Precise Pangolin:
 
- sudo apt-add-repository ppa:onest8/ppa
+ sudo apt-add-repository ppa:onest8/time-curb
  sudo apt-get update && sudo apt-get install parental-time-curb
 
 For Debian Wheezy, you'll need to manually add the repo (I've had
 problems with Debian's apt-add-repository command):
 
- echo "deb http://ppa.launchpad.net/onest8/ppa/ubuntu precise main" | \
-   sudo tee /etc/apt/sources.list.d/onest8-ppa-precise.list > /dev/null
- sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 851662D2
+ echo "deb http://ppa.launchpad.net/onest8/time-curb/ubuntu precise main" | \
+   sudo tee /etc/apt/sources.list.d/parental-time-curg.list > /dev/null
+ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 34E4DEABDA279EE6
  sudo apt-get update && sudo apt-get install parental-time-curb
 
 If you have any questions, comments, concerns, feature requrests or just

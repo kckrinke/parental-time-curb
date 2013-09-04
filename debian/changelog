@@ -1,3 +1,10 @@
+parental-time-curb (0.1.5-1) unstable; urgency=low
+
+  * Updated README with new repo notes
+  * Fixed incorrect signature key import in postinst for time-curb ppa
+
+ -- Kevin C. Krinke <kevin@krinke.ca>  Wed, 04 Sep 2013 10:30:42 -0400
+
 parental-time-curb (0.1.4-1) unstable; urgency=low
 
   * Watch the log file from the admin tool

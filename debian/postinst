@@ -64,7 +64,7 @@ case "$1" in
             echo "deb http://ppa.launchpad.net/onest8/time-curb/ubuntu precise main" > \
                 /etc/apt/sources.list.d/parental-time-curb.list
             echo "Adding Parental Time Curb APT Keys..."
-            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 851662D2
+            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 34E4DEABDA279EE6
         fi
         ;;
 
