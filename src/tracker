@@ -161,7 +161,7 @@ do
                                     "You have ${daily_delta} minutes left on your daily computer limit... Save your game/files/whatever ASAP :D"
                                 ;;
                         esac
-                        log_verbose "      close_delta: $close_minutes - $these_minutes = ${close_delta}"
+                        log_verbose "        close_delta: $close_minutes - $these_minutes = ${close_delta}"
                         case "$close_delta" in
                             "30"|"20"|"10")
                                 log_verbose "        info close_delta: ${close_delta}"
