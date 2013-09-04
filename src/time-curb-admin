@@ -4,7 +4,6 @@ use warnings;
 use diagnostics;
 use File::Slurp;
 use UI::Dialog::Backend::CDialog;
-use Data::Dumper;
 use Term::Size qw(chars);
 
 our $VERSION = '0.1.2';
