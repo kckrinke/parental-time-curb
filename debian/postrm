@@ -24,7 +24,11 @@ case "$1" in
     ;;
     purge)
 	[ -f /var/log/parental-time-curb.log ] && rm -f /var/log/parental-time-curb.log
-	rm -f /etc/parental-time-curb/users.d/*
+    for usr in /etc/parental-time-curb/users.d/*
+    do
+        rm -vf /etc/parental-time-curb/users.d/${usr}
+        rm -vf /var/log/parental-time-curb.${usr}
+    done
     ;;
 
     *)
