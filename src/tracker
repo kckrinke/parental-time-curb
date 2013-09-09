@@ -64,12 +64,22 @@ do
                 if [ $day_of_week -eq 6 ]
                 then
                     log_verbose "    saturday permitted. skipping."
+                    write_user_stats "${user_name}" \
+                        $(expr 60 \* 24) "0" \
+                        $(expr 60 \* 24) "0" "0" \
+                        "00:00" "24:00" \
+                        "${ENABLED}"
                     exit 0
                 elif [ $day_of_week -eq 7 ]
                 then
                     if [ $SUNDAY_NIGHT_IS_WEEKNIGHT -eq 0 ]
                     then
                         log_verbose "    sunday permitted. skipping."
+                        write_user_stats "${user_name}" \
+                            $(expr 60 \* 24) "0" \
+                            $(expr 60 \* 24) "0" "0" \
+                            "00:00" "24:00" \
+                            "${ENABLED}"
                         exit 0
                     fi
                 elif [ $day_of_week -eq 5 -a $FRIDAY_NIGHT_IS_WEEKEND -eq 1 ]
@@ -77,6 +87,11 @@ do
                     if [ $these_minutes -ge $(expr $close_minutes - 30) ]
                     then
                         log_verbose "    friday night permitted. skipping."
+                        write_user_stats "${user_name}" \
+                            $(expr 60 \* 24) "0" \
+                            $(expr 60 \* 24) "0" "0" \
+                            "00:00" "24:00" \
+                            "${ENABLED}"
                         exit 0
                     fi
                 fi
@@ -132,6 +147,12 @@ do
             log_verbose "    daily window open: ${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}"
             log_verbose "    daily window close: ${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}"
             log_verbose "    daily delta: ${TOTAL_DAILY_MAX} - ${daily_total} = ${daily_delta}"
+            write_user_stats "${user_name}" \
+                "${daily_total}" "${today_bonus}" \
+                "${DAILY_MAX}" "${TOTAL_DAILY_MAX}" "${daily_delta}" \
+                "${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}" \
+                "${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}" \
+                "${ENABLED}"
 
             #
             #: Daily Limits
@@ -186,6 +207,11 @@ do
         else
             log_verbose "    tracking disabled for user"
             unlock_user ${user_name}
+            write_user_stats "${user_name}" \
+                $(expr 60 \* 24) "0" \
+                $(expr 60 \* 24) "0" "0" \
+                "00:00" "24:00" \
+                "${ENABLED}"
         fi
     )
 done
