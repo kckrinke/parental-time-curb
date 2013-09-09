@@ -3,3 +3,4 @@ src/tracker usr/lib/parental-time-curb/
 src/upgrade-user-conf usr/lib/parental-time-curb/
 src/example.user.conf usr/share/parental-time-curb/
 src/time-curb-admin usr/sbin/
+src/time-curb-indicator usr/bin/
