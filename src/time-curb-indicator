@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+
+import sys, os, re
+import gtk, appindicator
+
+PING_FREQUENCY = 1 # in seconds
+STATUS_INDICATORS = {
+    0:"battery-missing",
+    5:"battery-caution",
+    10:"battery-empty",
+    30:"battery-low",
+    60:"battery-good",
+    90:"battery-full",
+    }
+                    
+class TimeCurbIndicator:
+    user_name=None
+    ind=None
+    def __init__(self,user):
+        self.user_name = user
+        self.ind = appindicator.Indicator("time-curb-indicator",
+                                          "indicator-message",
+                                          appindicator.CATEGORY_APPLICATION_STATUS)
+        self.ind.set_status(appindicator.STATUS_ACTIVE)
+        self.menu_setup()
+        self.ind.set_menu(self.menu)
+
+    def gen_menu_item(self,label):
+        item = gtk.MenuItem(label)
+        item.show()
+        self.menu.append(item)
+        return item
+
+    def menu_setup(self):
+        """
+        'daily_total'
+        'daily_bonus'
+        'daily_max'
+        'total_daily_max'
+        'daily_delta'
+        'open_time'
+        'close_time'
+        'is_enabled'
+        """
+        self.menu = gtk.Menu()
+        self.item_sod = self.gen_menu_item("Start Time:")
+        self.item_eod = self.gen_menu_item("End Time:")
+        self.item_tb = self.gen_menu_item("Today Bonus:")
+        self.item_tt = self.gen_menu_item("Today Total:")
+        self.item_dm = self.gen_menu_item("Daily Max:")
+        self.item_tm = self.gen_menu_item("Total Max:")
+        self.item_math = self.gen_menu_item("max - today = rem")
+        self.quit_item = self.gen_menu_item("Quit")
+        self.quit_item.connect("activate", self.quit)
+        pass
+
+    def main(self):
+        self.check_time()
+        gtk.timeout_add(PING_FREQUENCY * 1000, self.check_time)
+        gtk.main()
+
+    def check_time(self):
+        datum = self.read_stats()
+        if datum['is_enabled'] != "1":
+            self.ind.set_icon("battery-full")
+            self.ind.set_label("Disabled")
+            self.item_sod.set_label("Start Time: 0:00")
+            self.item_eod.set_label("Start Time: 23:59")
+            self.item_tb.set_label("Today Bonus: 0")
+            self.item_tt.set_label("Today Total: 0")
+            self.item_dm.set_label("Daily Max: 1440")
+            self.item_tm.set_label("Total Max: 1440")
+            self.item_math.set_label("1440 - 0 = 1440")
+            return True
+        daily_delta=int(datum['daily_delta'])
+        self.ind.set_label("%d min" % daily_delta)
+        self.item_sod.set_label("Open Time: %s" % datum['open_time'])
+        self.item_eod.set_label("Close Time: %s" % datum['close_time'])
+        self.item_tb.set_label("Today Bonus: %s" % datum['daily_bonus'])
+        self.item_tt.set_label("Today Total: %s" % datum['daily_total'])
+        self.item_dm.set_label("Daily Max: %s" % datum['daily_max'])
+        self.item_tm.set_label("Total Max: %s" % datum['total_daily_max'])
+        self.item_math.set_label("%s - %s = %s" % (datum['total_daily_max'],datum['daily_total'],datum['daily_delta']))
+        skeys = STATUS_INDICATORS.keys()
+        skeys.sort()
+        last_key=0
+        for k in skeys:
+            if k >= daily_delta:
+                break
+            last_key=k
+        self.ind.set_icon(STATUS_INDICATORS[last_key])
+        return True
+
+    def read_stats(self):
+        datum={
+            'daily_total':"0",
+            'daily_bonus':"0",
+            'daily_max':"0",
+            'total_daily_max':"0",
+            'daily_delta':"-1",
+            'open_time':"0:00",
+            'close_time':"0:00",
+            'is_enabled':"0",
+            }
+        stats_file='/var/log/parental-time-curb.%s' % self.user_name
+        if os.path.exists(stats_file):
+            fh=open(stats_file,'r')
+            if fh:
+                rx = re.compile("^\s*([_a-zA-Z]+?)\s*\=\s*(.*)\s*$")
+                for line in fh:
+                    m = rx.match(line.strip())
+                    if m:
+                        key = m.group(1)
+                        val = m.group(2)
+                        #print "match ",m.group(0),key,val
+                        datum[key] = val
+                    pass
+        return datum
+
+    def quit(self, widget):
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    TimeCurbIndicator(os.environ['USER']).main()
+
