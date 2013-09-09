@@ -25,8 +25,8 @@ case "$1" in
         chmod 440 /usr/lib/parental-time-curb/common.sh
         chmod 550 /usr/lib/parental-time-curb/tracker
         chmod 550 /usr/lib/parental-time-curb/upgrade-user-conf
-        chmod 550 /usr/bin/time-curb-admin
-        chown root.root /usr/bin/time-curb-admin
+        chmod 550 /usr/sbin/time-curb-admin
+        chown root.root /usr/sbin/time-curb-admin
         # make sure that the conf dir isn't readable except to root
         chmod 700 /etc/parental-time-curb
         chown root.root /etc/parental-time-curb
@@ -65,6 +65,11 @@ case "$1" in
                 /etc/apt/sources.list.d/parental-time-curb.list
             echo "Adding Parental Time Curb APT Keys..."
             apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 34E4DEABDA279EE6
+        fi
+        # remove old location if new location is setup
+        if [ -f /usr/bin/time-curb-admin -a -f /usr/sbin/time-curb-admin ]
+        then
+            rm -f /usr/bin/time-curb-admin
         fi
         ;;
 

@@ -2,4 +2,4 @@ src/common.sh usr/lib/parental-time-curb/
 src/tracker usr/lib/parental-time-curb/
 src/upgrade-user-conf usr/lib/parental-time-curb/
 src/example.user.conf usr/share/parental-time-curb/
-src/time-curb-admin usr/bin/
+src/time-curb-admin usr/sbin/
