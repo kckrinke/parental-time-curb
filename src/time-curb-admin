@@ -471,7 +471,7 @@ sub get_user_state {
     if (-f $today_bonus_file) {
         my $val = read_file($today_bonus_file);
         $val =~ s!^\s*(\d+)\s*$!$1!ms;
-        $today_bonus_file = scalar($val);
+        $today_bonus = scalar($val);
     }
     return { daily_total => $daily_total,
              today_bonus => $today_bonus };
