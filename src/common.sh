@@ -44,6 +44,20 @@ function log_verbose () {
     write_log $LOG_VERBOSE "$1"
 }
 
+function write_user_stats {
+    user_name=$1
+    echo "# ${user_name} stats
+daily_total=$2
+daily_bonus=$3
+daily_max=$4
+total_daily_max=$5
+daily_delta=$6
+open_time=$7
+close_time=$8
+is_enabled=$9" \
+    > "/var/log/parental-time-curb.${user_name}"
+}
+
 function is_logged_in () {
     user=$1
     /usr/bin/w -f -h | grep -q "^${user}"
