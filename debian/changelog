@@ -1,3 +1,13 @@
+parental-time-curb (0.1.6-1) unstable; urgency=low
+
+  * Bugfix for time-curb-admin not displaying correct today_bonus
+  * Moved time-curb-admin to /usr/sbin
+  * tracker now logs stats to /var/log/parental-time-curb.username
+  * New gtk based python appindicator added (time-curb-indicator)
+  * Added pkg dep on python-appindicator, python-gtk2
+
+ -- Kevin C. Krinke <kevin@krinke.ca>  Mon, 09 Sep 2013 00:22:38 -0400
+
 parental-time-curb (0.1.5-1) unstable; urgency=low
 
   * Updated README with new repo notes
