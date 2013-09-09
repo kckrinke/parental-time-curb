@@ -3,7 +3,7 @@
 import sys, os, re
 import gtk, appindicator
 
-PING_FREQUENCY = 1 # in seconds
+PING_FREQUENCY = 15 # in seconds
 STATUS_INDICATORS = {
     0:"battery-missing",
     5:"battery-caution",
