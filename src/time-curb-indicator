@@ -49,6 +49,7 @@ class TimeCurbIndicator:
         self.item_tt = self.gen_menu_item("Today Total:")
         self.item_dm = self.gen_menu_item("Daily Max:")
         self.item_tm = self.gen_menu_item("Total Max:")
+        self.item_lm = self.gen_menu_item("Lockscreen Mod:")
         self.item_math = self.gen_menu_item("max - today = rem")
         self.quit_item = self.gen_menu_item("Quit")
         self.quit_item.connect("activate", self.quit)
@@ -70,6 +71,7 @@ class TimeCurbIndicator:
             self.item_tt.set_label("Today Total: 0")
             self.item_dm.set_label("Daily Max: 1440")
             self.item_tm.set_label("Total Max: 1440")
+            self.item_lm.set_lable("Lockscreen Mod: 3")
             self.item_math.set_label("1440 - 0 = 1440")
             return True
         daily_delta=int(datum['daily_delta'])
@@ -80,6 +82,7 @@ class TimeCurbIndicator:
         self.item_tt.set_label("Today Total: %s" % datum['daily_total'])
         self.item_dm.set_label("Daily Max: %s" % datum['daily_max'])
         self.item_tm.set_label("Total Max: %s" % datum['total_daily_max'])
+        self.item_lm.set_label("Lockscreen Mod: %s" % datum['lock_modifier'])
         self.item_math.set_label("%s - %s = %s" % (datum['total_daily_max'],datum['daily_total'],datum['daily_delta']))
         skeys = STATUS_INDICATORS.keys()
         skeys.sort()
@@ -101,6 +104,7 @@ class TimeCurbIndicator:
             'open_time':"0:00",
             'close_time':"0:00",
             'is_enabled':"0",
+            'lock_modifier':"0",
             }
         stats_file='/var/log/parental-time-curb.%s' % self.user_name
         if os.path.exists(stats_file):

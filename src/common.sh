@@ -54,13 +54,21 @@ total_daily_max=$5
 daily_delta=$6
 open_time=$7
 close_time=$8
-is_enabled=$9" \
+is_enabled=$9
+lock_modifier=${10}" \
     > "/var/log/parental-time-curb.${user_name}"
 }
 
 function is_logged_in () {
     user=$1
     /usr/bin/w -f -h | grep -q "^${user}"
+    [ $? -eq 0 ] && return 0
+    return 1
+}
+
+function is_screen_locked () {
+    user=$1
+    /usr/bin/gnome-screensaver-command -q | grep -q "is active"
     [ $? -eq 0 ] && return 0
     return 1
 }
@@ -94,6 +102,47 @@ function inc_current_daily_total () {
     daily_total=$(expr $current_daily_total + 1)
     set_current_daily_total ${user} ${daily_total}
     echo -n ${daily_total}
+}
+
+function get_current_lock_count () {
+    user=$1
+    lock_count_file=${VAR_LIB_DIR}/${user}.lock_count
+    if [ -f ${lock_count_file} ]
+    then
+        echo -n $(cat ${lock_count_file} | perl -pe 's/\n//')
+    else
+        echo -n 0
+    fi
+}
+
+function set_current_lock_count () {
+    user=$1
+    value=$2
+    lock_count_file=${VAR_LIB_DIR}/${user}.lock_count
+    echo -n "${value}" > ${lock_count_file}
+}
+
+function inc_current_lock_count () {
+    user=$1
+    current_lock_count=$(get_current_lock_count ${user})
+    lock_count_value=$(expr $current_lock_count + 1)
+    set_current_lock_count ${user} ${lock_count_value}
+    echo -n ${lock_count_value}
+}
+
+function inc_modified_daily_total () {
+    user=$1
+    modifier=$2
+    current_lock_count=$(get_current_lock_count ${user})
+    if [ $modifier -gt 0 -a $current_lock_count -ge $modifier ]
+    then
+        # threshold met, actually bump a minute
+        set_current_lock_count ${user} 0
+        inc_current_daily_total ${user}
+    else
+        # just bump the counter
+        inc_current_lock_count ${user}
+    fi
 }
 
 function is_user_locked () {

@@ -36,6 +36,8 @@ do
         DAILY_OPEN_MINUTE=0
         DAILY_CLOSE_HOUR=21
         DAILY_CLOSE_MINUTE=30
+        LOCKSCREEN_AS_LOGOUT=0
+        LOCKSCREEN_MODIFIER=3
 
         # load user settings
         user_conf=${ETC_USR_DIR}/${user_name}
@@ -68,7 +70,8 @@ do
                         $(expr 60 \* 24) "0" \
                         $(expr 60 \* 24) "0" "0" \
                         "00:00" "24:00" \
-                        "${ENABLED}"
+                        "${ENABLED}" \
+                        "${LOCKSCREEN_MODIFIER}"
                     exit 0
                 elif [ $day_of_week -eq 7 ]
                 then
@@ -79,7 +82,8 @@ do
                             $(expr 60 \* 24) "0" \
                             $(expr 60 \* 24) "0" "0" \
                             "00:00" "24:00" \
-                            "${ENABLED}"
+                            "${ENABLED}" \
+                            "${LOCKSCREEN_MODIFIER}"
                         exit 0
                     fi
                 elif [ $day_of_week -eq 5 -a $FRIDAY_NIGHT_IS_WEEKEND -eq 1 ]
@@ -91,7 +95,8 @@ do
                             $(expr 60 \* 24) "0" \
                             $(expr 60 \* 24) "0" "0" \
                             "00:00" "24:00" \
-                            "${ENABLED}"
+                            "${ENABLED}" \
+                            "${LOCKSCREEN_MODIFIER}"
                         exit 0
                     fi
                 fi
@@ -117,8 +122,26 @@ do
             if [ $? -eq 0 ]
             then
                 log_verbose "    ${user_name} is currently logged in"
-                inc_current_daily_total ${user_name}
                 LOGGED_IN=1
+                #
+                #: Is the user lockscreen'd?
+                #
+                if [ $LOCKSCREEN_AS_LOGOUT -eq 1 ]
+                then
+                #log_verbose "    ${user_name} "
+                    is_screen_locked ${user_name}
+                    if [ $? -eq 0 ]
+                    then
+                        log_verbose "    ${user_name} has active lockscreen"
+                        inc_modified_daily_total ${user_name} ${LOCKSCREEN_MODIFIER}
+                    else
+                        log_verbose "    ${user_name} has inactive lockscreen"
+                        inc_current_daily_total ${user_name}
+                    fi
+                else
+                    log_verbose "    ${user_name} lockscreen state ignored"
+                    inc_current_daily_total ${user_name}
+                fi
             else
                 log_verbose "    ${user_name} is currently NOT logged in"
             fi
@@ -152,7 +175,8 @@ do
                 "${DAILY_MAX}" "${TOTAL_DAILY_MAX}" "${daily_delta}" \
                 "${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}" \
                 "${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}" \
-                "${ENABLED}"
+                "${ENABLED}" \
+                "${LOCKSCREEN_MODIFIER}"
 
             #
             #: Daily Limits
@@ -211,7 +235,8 @@ do
                 $(expr 60 \* 24) "0" \
                 $(expr 60 \* 24) "0" "0" \
                 "00:00" "24:00" \
-                "${ENABLED}"
+                "${ENABLED}" \
+                "${LOCKSCREEN_MODIFIER}"
         fi
     )
 done

@@ -60,6 +60,12 @@ our $USER_SETTINGS =
   DAILY_CLOSE_MINUTE => { default => "30", type => 'minute',
                           desc => "Minute of the closing hour.",
                         },
+  LOCKSCREEN_AS_LOGOUT => { default => "0", type => 'bool',
+                            desc => "Users with locked screens have a modified time curb.",
+                          },
+  LOCKSCREEN_MODIFIER => { default => "3", type => 'int',
+                           desc => "For every X lockscreen minutes, add 1 minute to the curb.",
+                         },
  };
 
 check_perms();

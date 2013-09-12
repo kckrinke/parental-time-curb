@@ -15,7 +15,14 @@ function check_update () {
 }
 
 #
-# New 0.2.0
+# New 1.7
+#
+
+check_update "LOCKSCREEN_AS_LOGOUT" 0 "Treat users with active screensaver as logged out?"
+check_update "LOCKSCREEN_MODIFIER" 3 "Screensaver slows down the timer (in minutes)?"
+
+#
+# New 0.1.1
 #
 
 check_update "FRIDAY_NIGHT_IS_WEEKEND" 0 "Are Friday nights considered weekends?"
