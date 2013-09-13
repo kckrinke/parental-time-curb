@@ -59,6 +59,12 @@ lock_modifier=${10}" \
     > "/var/log/parental-time-curb.${user_name}"
 }
 
+function get_display () {
+    user=$1
+    display=$(/usr/bin/w -h | egrep "^${user}" | awk {'print $3'})
+    echo -n ${display}
+}
+
 function is_logged_in () {
     user=$1
     /usr/bin/w -f -h | grep -q "^${user}"
@@ -68,7 +74,9 @@ function is_logged_in () {
 
 function is_screen_locked () {
     user=$1
-    sudo -u ${user} -H DISPLAY=:0 /usr/bin/gnome-screensaver-command -q | grep -q "is active"
+    display=$(get_display ${user})
+    [ -n "${display}" ] || return 0 # no display? no lockscreen possible
+    sudo -u ${user} -H DISPLAY=${display} /usr/bin/gnome-screensaver-command -q | grep -q "is active"
     [ $? -eq 0 ] && return 0
     return 1
 }
@@ -207,19 +215,37 @@ function notify_user_info () {
     user=$1
     subject=$2
     message=$3
-    sudo -u ${user} -H DISPLAY=:0 notify-send --urgency=critical --icon=dialog-information "${subject}" "${message}"
+    display=$(get_display ${user})
+    if [ -n "${display}" ]
+    then
+        sudo -u ${user} -H DISPLAY=${display} notify-send --urgency=critical --icon=dialog-information "${subject}" "${message}"
+    else
+        echo -e "${subject}\n${message}" | sudo write ${user}
+    fi
 }
 
 function notify_user_warn () {
     user=$1
     subject=$2
     message=$3
-    sudo -u ${user} -H DISPLAY=:0 notify-send --urgency=critical --icon=dialog-warning "${subject}" "${message}"
+    display=$(get_display ${user})
+    if [ -n "${display}" ]
+    then
+        sudo -u ${user} -H DISPLAY=${display} notify-send --urgency=critical --icon=dialog-warning "${subject}" "${message}"
+    else
+        echo -e "${subject}\n${message}" | sudo write ${user}
+    fi
 }
 
 function notify_user_error () {
     user=$1
     subject=$2
     message=$3
-    sudo -u ${user} -H DISPLAY=:0 notify-send --urgency=critical --icon=dialog-error "${subject}" "${message}"
+    display=$(get_display ${user})
+    if [ -n "${display}" ]
+    then
+        sudo -u ${user} -H DISPLAY=${display} notify-send --urgency=critical --icon=dialog-error "${subject}" "${message}"
+    else
+        echo -e "${subject}\n${message}" | sudo write ${user}
+    fi
 }
