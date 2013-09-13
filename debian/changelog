@@ -1,3 +1,13 @@
+parental-time-curb (0.1.7-1) unstable; urgency=low
+
+  * LOCKSCREEN_AS_LOGOUT, treat users with locked screens as being logged out (with optional modifier)
+  * LOCKSCREEN_MODIFIER, for each modifier count increment the actual total (set to 0 to stop timer while users are lockscreen'd)
+  * Updated stats output to include modifier value
+  * Updated indicator to display modifier value
+  * Properly reset the lockscreen counter when no longer locked
+
+ -- Kevin C. Krinke <kevin@krinke.ca>  Thu, 12 Sep 2013 18:39:28 -0400
+
 parental-time-curb (0.1.6-1) unstable; urgency=low
 
   * Bugfix for time-curb-admin not displaying correct today_bonus
