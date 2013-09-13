@@ -68,7 +68,7 @@ function is_logged_in () {
 
 function is_screen_locked () {
     user=$1
-    /usr/bin/gnome-screensaver-command -q | grep -q "is active"
+    sudo -u ${user} -H /usr/bin/gnome-screensaver-command -q | grep -q "is active"
     [ $? -eq 0 ] && return 0
     return 1
 }
