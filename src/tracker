@@ -117,6 +117,7 @@ do
             #
             #: Is the user logged in?
             #
+            lock_count_file=${VAR_LIB_DIR}/${user_name}.lock_count
             LOGGED_IN=0
             is_logged_in ${user_name}
             if [ $? -eq 0 ]
@@ -128,7 +129,6 @@ do
                 #
                 if [ $LOCKSCREEN_AS_LOGOUT -eq 1 ]
                 then
-                #log_verbose "    ${user_name} "
                     is_screen_locked ${user_name}
                     if [ $? -eq 0 ]
                     then
@@ -137,6 +137,11 @@ do
                     else
                         log_verbose "    ${user_name} has inactive lockscreen"
                         inc_current_daily_total ${user_name}
+                        was_screen_locked ${user_name}
+                        if [ $? -eq 0 ]
+                        then
+                            rm -f ${lock_count_file}
+                        fi
                     fi
                 else
                     log_verbose "    ${user_name} lockscreen state ignored"
@@ -163,10 +168,17 @@ do
             fi
             TOTAL_DAILY_MAX=$(expr ${DAILY_MAX} + ${today_bonus})
             daily_delta=$(expr ${TOTAL_DAILY_MAX} - ${daily_total})
+            lock_count="0"
+            if [ -e ${lock_count_file} ]
+            then
+                lock_count=$(cat $lock_count_file)
+            fi
             log_verbose "    current daily total: ${daily_total}"
             log_verbose "    current daily bonus: ${today_bonus}"
+            log_verbose "    current lock count: ${lock_count}"
             log_verbose "    config daily max: ${DAILY_MAX}"
             log_verbose "    total daily max: ${TOTAL_DAILY_MAX}"
+            log_verbose "    lockscreen modifier: ${LOCKSCREEN_MODIFIER}"
             log_verbose "    daily window open: ${DAILY_OPEN_HOUR}:${DAILY_OPEN_MINUTE}"
             log_verbose "    daily window close: ${DAILY_CLOSE_HOUR}:${DAILY_CLOSE_MINUTE}"
             log_verbose "    daily delta: ${TOTAL_DAILY_MAX} - ${daily_total} = ${daily_delta}"

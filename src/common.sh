@@ -73,6 +73,22 @@ function is_screen_locked () {
     return 1
 }
 
+function was_screen_locked () {
+    user=$1
+    lock_screen_file=${VAR_LIB_DIR}/${user}.lock_count
+    [ ! -e ${lock_screen_file} ] && return 1
+    lsf_epoch=$(date -r ${lock_screen_file} +%s)
+    now_opoch=$(date +%s)
+    # if the file was touched within the last minute
+    if [ $(expr $now_epoch - $lsf_epoch) -ge 60 ]
+    then
+        log_debug "    ${user} lockscreen active last cycle"
+        return 0
+    fi
+    log_debug "    ${user} lockscreen inactive last cycle"
+    return 1
+}
+
 function is_enabled () {
     [ "$IS_ENABLED" == "1" ] && return 0
     return 1
