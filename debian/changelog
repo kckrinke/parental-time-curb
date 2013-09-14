@@ -5,6 +5,10 @@ parental-time-curb (0.1.7-1) unstable; urgency=low
   * Updated stats output to include modifier value
   * Updated indicator to display modifier value
   * Properly reset the lockscreen counter when no longer locked
+  * When no DISPLAY available, but user logged in, use write(1) instead of notify-send
+  * Added new log verbosity; debug (2)
+  * Try to reliably get the user's actual DISPLAY
+  * Try to reliably get the user's Gnome Screensaver state (needs to support more here)
 
  -- Kevin C. Krinke <kevin@krinke.ca>  Thu, 12 Sep 2013 18:39:28 -0400
 
