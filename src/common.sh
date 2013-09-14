@@ -66,7 +66,8 @@ lock_modifier=${10}" \
 
 function get_display () {
     user=$1
-    display=$(/usr/bin/w -h | egrep "^${user}" | awk {'print $3'})
+    # we want just the one with the main DISPLAY (\:[0-9]+) not sub-displays
+    display=$(/usr/bin/who | egrep "^${user}" | egrep '\(\:[0-9]+\)' | perl -pe 's/^.+?\((\:\d+)\)\s*$/$1/')
     echo -n ${display}
     log_debug "get_display (${user}) = ${display}"
 }
