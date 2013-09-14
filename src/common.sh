@@ -21,7 +21,8 @@ unset ENABLED
 export IS_ENABLED LOG_LEVEL NO_ACTIONS
 
 export LOG_NORMAL=0
-export LOG_VERBOSE=0
+export LOG_VERBOSE=1
+export LOG_DEBUG=2
 
 function write_log () {
     LEVEL=$1
@@ -44,6 +45,10 @@ function log_verbose () {
     write_log $LOG_VERBOSE "$1"
 }
 
+function log_debug () {
+    write_log $LOG_DEBUG "$1"
+}
+
 function write_user_stats {
     user_name=$1
     echo "# ${user_name} stats
@@ -63,12 +68,15 @@ function get_display () {
     user=$1
     display=$(/usr/bin/w -h | egrep "^${user}" | awk {'print $3'})
     echo -n ${display}
+    log_debug "get_display (${user}) = ${display}"
 }
 
 function is_logged_in () {
     user=$1
     /usr/bin/w -f -h | grep -q "^${user}"
-    [ $? -eq 0 ] && return 0
+    rv=$?
+    log_debug "is_logged_in (${user}) = ${rv}"
+    [ $rv -eq 0 ] && return 0
     return 1
 }
 
@@ -77,7 +85,9 @@ function is_screen_locked () {
     display=$(get_display ${user})
     [ -n "${display}" ] || return 0 # no display? no lockscreen possible
     sudo -u ${user} -H DISPLAY=${display} /usr/bin/gnome-screensaver-command -q | grep -q "is active"
-    [ $? -eq 0 ] && return 0
+    rv=$?
+    log_debug "sudo -u ${user} -H DISPLAY=${display} /usr/bin/gnome-screensaver-command -q = ${rv}"
+    [ $rv -eq 0 ] && return 0
     return 1
 }
 
@@ -90,10 +100,10 @@ function was_screen_locked () {
     # if the file was touched within the last minute
     if [ $(expr $now_epoch - $lsf_epoch) -ge 60 ]
     then
-        log_debug "    ${user} lockscreen active last cycle"
+        log_verbose "    ${user} lockscreen active last cycle"
         return 0
     fi
-    log_debug "    ${user} lockscreen inactive last cycle"
+    log_verbose "    ${user} lockscreen inactive last cycle"
     return 1
 }
 

@@ -129,13 +129,14 @@ do
                 #
                 if [ $LOCKSCREEN_AS_LOGOUT -eq 1 ]
                 then
+                    log_verbose "    lockscreen state checks..."
                     is_screen_locked ${user_name}
                     if [ $? -eq 0 ]
                     then
-                        log_verbose "    ${user_name} has active lockscreen"
+                        log_verbose "      ${user_name} has active lockscreen"
                         inc_modified_daily_total ${user_name} ${LOCKSCREEN_MODIFIER}
                     else
-                        log_verbose "    ${user_name} has inactive lockscreen"
+                        log_verbose "      ${user_name} has inactive lockscreen"
                         inc_current_daily_total ${user_name}
                         was_screen_locked ${user_name}
                         if [ $? -eq 0 ]
