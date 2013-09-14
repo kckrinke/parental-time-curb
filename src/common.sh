@@ -97,9 +97,10 @@ function was_screen_locked () {
     lock_screen_file=${VAR_LIB_DIR}/${user}.lock_count
     [ ! -e ${lock_screen_file} ] && return 1
     lsf_epoch=$(date -r ${lock_screen_file} +%s)
-    now_opoch=$(date +%s)
+    now_epoch=$(date +%s)
     # if the file was touched within the last minute
-    if [ $(expr $now_epoch - $lsf_epoch) -ge 60 ]
+    delta_epoch=$(expr $now_epoch - $lsf_epoch)
+    if [ $delta_epoch -ge 60 ]
     then
         log_verbose "    ${user} lockscreen active last cycle"
         return 0
