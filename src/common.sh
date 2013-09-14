@@ -85,7 +85,7 @@ function is_screen_locked () {
     user=$1
     display=$(get_display ${user})
     [ -n "${display}" ] || return 0 # no display? no lockscreen possible
-    sudo -u ${user} -H DISPLAY=${display} /usr/bin/gnome-screensaver-command -q | grep -q "is active"
+    (sudo -u ${user} -H DISPLAY=${display} /usr/bin/gnome-screensaver-command -q) 2>&1 | grep -q "is active"
     rv=$?
     log_debug "sudo -u ${user} -H DISPLAY=${display} /usr/bin/gnome-screensaver-command -q = ${rv}"
     [ $rv -eq 0 ] && return 0
