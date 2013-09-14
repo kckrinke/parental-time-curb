@@ -3,6 +3,8 @@
 # Common Functions
 #
 
+VERSION=0.1.7
+
 USR_LIB_DIR=/usr/lib/parental-time-curb
 VAR_LIB_DIR=/var/lib/parental-time-curb
 ETC_USR_DIR=/etc/parental-time-curb/users.d

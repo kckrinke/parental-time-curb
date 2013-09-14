@@ -6,7 +6,7 @@ use File::Slurp;
 use UI::Dialog::Backend::CDialog;
 use Term::Size qw(chars);
 
-our $VERSION = '0.1.4';
+our $VERSION = '0.1.7';
 
 use constant { TRUE => 1, FALSE => 0, RV_NORMAL => 0, RV_ERROR => 1 };
 use constant { ETC_DEFAULT => '/etc/default/parental-time-curb',

@@ -8,7 +8,7 @@ export DRY_RUN=0
 is_enabled
 if [ $? -ne 0 ]
 then
-    log_verbose "Not enabled"
+    log_verbose "tracker(v${VERSION}) not enabled"
     exit 0
 fi
 
@@ -22,7 +22,7 @@ fi
 #       if so, fire off worker process
 #       else give notification
 
-log_verbose "tracker run started"
+log_verbose "tracker(v${VERSION}) run started"
 for user_name in $(/bin/ls ${ETC_USR_DIR} | egrep -v '~$')
 do
     (
