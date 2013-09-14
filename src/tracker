@@ -3,7 +3,7 @@
 export DRY_RUN=0
 [ "$1" == "--dry-run" ] && export DRY_RUN=1
 
-. /usr/lib/parental-time-curb/common.sh
+. $(dirname $0)/common.sh
 
 is_enabled
 if [ $? -ne 0 ]
