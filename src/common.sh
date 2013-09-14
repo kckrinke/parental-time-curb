@@ -143,12 +143,13 @@ function inc_current_daily_total () {
 function get_current_lock_count () {
     user=$1
     lock_count_file=${VAR_LIB_DIR}/${user}.lock_count
+    count=0
     if [ -f ${lock_count_file} ]
     then
-        echo -n $(cat ${lock_count_file} | perl -pe 's/\n//')
-    else
-        echo -n 0
+        count=$(cat ${lock_count_file} | perl -pe 's/\n//')
     fi
+    log_debug "get_current_lock_count (${user}) = ${count}"
+    echo -n "${count}"
 }
 
 function set_current_lock_count () {
