@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+import sys, os, re
+import gtk, cairo
+
+class TimeCurbChallenge(gtk.Window):
+    user_name=None
+    window=None
+    dialog=None
+    screen=None
+    
+    def __init__(self,user):
+        super(TimeCurbChallenge,self).__init__()
+        self.user_name = user
+        # init
+        self.set_title("Time Curb Challenge")
+        self.connect("destroy", self.main_quit)
+        self.screen = self.get_screen()
+        self.visual = self.screen.get_rgba_visual()
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_decorated(False)
+        self.set_app_paintable(True)
+        self.fullscreen()
+        self.set_modal(True)
+        self.set_keep_above(True)
+        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+        #self.set_skip_taskbar_hint(True)
+        #self.set_skip_pager_hint(True)
+        # content
+        self.title_label = gtk.Label("Time Curb Challenge")
+        self.top_vbox = gtk.VBox(True,5)
+        self.title_hbox = gtk.HBox(True,5)
+        self.top_vbox.pack_start(self.title_hbox,True,True,3)
+        self.title_hbox.pack_start(self.title_label,True,True,3)
+        self.add(self.top_vbox)
+        # end init
+        self.connect("key_release_event", self.on_keypress)
+        self.set_events(gtk.gdk.KEY_PRESS_MASK)
+        self.show_all()
+        pass
+
+    def on_keypress(self,widget,event):
+        # keyname = gtk.gdk.keyval_name(event.keyval)
+        # print "Key %s (%d) was pressed" % (keyname, event.keyval)
+        # if keyname not in ('Alt_L','Alt_R'):
+        #     self.main_quit(None)
+        #     return True
+        # return False
+        keyname = gtk.gdk.keyval_name(event.keyval)
+        print "Key %s (%d) was pressed" % (keyname, event.keyval)
+        # if event.state & gtk.gdk.CONTROL_MASK:
+        #     print "Control was being held down"
+        # if event.state & gtk.gdk.MOD1_MASK:
+        #     print "Alt was being held down"
+        # if event.state & gtk.gdk.SHIFT_MASK:
+        #     print "Shift was being held down"
+        # if keyname in ('Tab'):
+        #     print "Tab Pressed"
+        if keyname is 'q':
+            self.main_quit(None)
+        return True
+
+    def main(self):
+        gtk.main()
+        pass
+
+    def main_quit(self,widget):
+        gtk.main_quit()
+        sys.exit(0)
+        pass
+
+
+if __name__ == "__main__":
+    TimeCurbChallenge(os.environ['USER']).main()
+
