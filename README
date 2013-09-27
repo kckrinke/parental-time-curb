@@ -51,3 +51,50 @@ problems with Debian's apt-add-repository command):
 
 If you have any questions, comments, concerns, feature requrests or just
 want to say hi; feel free to email me at kevin AT krinke DOT ca.
+
+
+Time Curb Challenge
+-------------------------
+
+The idea behind this application is to challenge kids with progressively more
+difficult math questions across the basic operators (+, -, % and x).
+
+ * Addition:
+  * Single digits
+  * Multiple digits + single digits
+  * Multiple digits + multiple digits
+  * Signed integer, single-digits
+  * Signed multiple digits + signed single
+  * Signed multiple + signed multiple
+ * Subtraction:
+  * Same as Addition
+ * Multiplication:
+  * Base tables up to 5
+  * Base tables up to 10
+  * Base tables up to 11
+  * Multiple digit X single digit
+  * Multiple digit X multiple digit
+  * Signed integer single X signed single
+  * Signed multiple X signed single
+  * Signed multiple X signed multiple
+ * Division:
+  * Opposite base tables
+  * ???
+
+Eventually I'd like to see this include algebra (and harder) topics and such,
+just have no idea how to put that together yet. So, for the time being we'll
+start with the essentials and figure out the post-elementary levels later.
+
+As for the rewards, it will be configurable but the expected defaults will be
+something along the lines of:
+
+ * For each correct answer, +5 minutes
+ * For each incorrect answer, -1 minute
+ * After 10 correct in a row, +10 minutes (equals 1hr total)
+ * After 20 correct in a row, next level
+ * Each "level" consists of three phases:
+  * Transitioning (unless level 1), includes 50/50 previous + current
+  * Moderate, 25/75 prev + current
+  * Adept, 10/90 prev + current
+
+Or something like that. Ideas are welcome.
