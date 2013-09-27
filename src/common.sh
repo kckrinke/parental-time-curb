@@ -166,7 +166,6 @@ function inc_current_lock_count () {
     current_lock_count=$(get_current_lock_count ${user})
     lock_count_value=$(expr $current_lock_count + 1)
     set_current_lock_count ${user} ${lock_count_value}
-    echo -n ${lock_count_value}
 }
 
 function inc_modified_daily_total () {

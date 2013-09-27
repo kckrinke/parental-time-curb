@@ -38,6 +38,7 @@ do
         DAILY_CLOSE_MINUTE=30
         LOCKSCREEN_AS_LOGOUT=0
         LOCKSCREEN_MODIFIER=3
+        SKIP_CURFEW_CHECKS=0
 
         # load user settings
         user_conf=${ETC_USR_DIR}/${user_name}
@@ -57,50 +58,6 @@ do
             these_minutes=$(expr $this_hour \* 60 + $this_minute)
             close_delta=$(expr $close_minutes - $these_minutes)
             day_of_week=$(date +%u)
-
-            #
-            #: Weekender Checks
-            #
-            if [ "${SKIP_WEEKENDS}" == "1" ]
-            then
-                if [ $day_of_week -eq 6 ]
-                then
-                    log_verbose "    saturday permitted. skipping."
-                    write_user_stats "${user_name}" \
-                        $(expr 60 \* 24) "0" \
-                        $(expr 60 \* 24) "0" "0" \
-                        "00:00" "24:00" \
-                        "${ENABLED}" \
-                        "${LOCKSCREEN_MODIFIER}"
-                    exit 0
-                elif [ $day_of_week -eq 7 ]
-                then
-                    if [ $SUNDAY_NIGHT_IS_WEEKNIGHT -eq 0 ]
-                    then
-                        log_verbose "    sunday permitted. skipping."
-                        write_user_stats "${user_name}" \
-                            $(expr 60 \* 24) "0" \
-                            $(expr 60 \* 24) "0" "0" \
-                            "00:00" "24:00" \
-                            "${ENABLED}" \
-                            "${LOCKSCREEN_MODIFIER}"
-                        exit 0
-                    fi
-                elif [ $day_of_week -eq 5 -a $FRIDAY_NIGHT_IS_WEEKEND -eq 1 ]
-                then
-                    if [ $these_minutes -ge $(expr $close_minutes - 30) ]
-                    then
-                        log_verbose "    friday night permitted. skipping."
-                        write_user_stats "${user_name}" \
-                            $(expr 60 \* 24) "0" \
-                            $(expr 60 \* 24) "0" "0" \
-                            "00:00" "24:00" \
-                            "${ENABLED}" \
-                            "${LOCKSCREEN_MODIFIER}"
-                        exit 0
-                    fi
-                fi
-            fi
 
             #
             #: Check timestamps and reset counters
@@ -150,6 +107,52 @@ do
                 fi
             else
                 log_verbose "    ${user_name} is currently NOT logged in"
+                exit 0
+            fi
+
+            #
+            #: Weekender Checks
+            #
+            SKIP_TIME_CHECKS=0
+            if [ "${SKIP_WEEKENDS}" == "1" ]
+            then
+                if [ $day_of_week -eq 5 -a $FRIDAY_NIGHT_IS_WEEKEND -eq 1 ]
+                then
+                    log_verbose "    friday night permitted. skipping."
+                    write_user_stats "${user_name}" \
+                        $(expr 60 \* 24) "0" \
+                        $(expr 60 \* 24) "0" "0" \
+                        "00:00" "24:00" \
+                        "${ENABLED}" \
+                        "${LOCKSCREEN_MODIFIER}"
+                    exit 0
+                elif [ $day_of_week -eq 6 ]
+                then
+                    log_verbose "    saturday permitted. skipping."
+                    write_user_stats "${user_name}" \
+                        $(expr 60 \* 24) "0" \
+                        $(expr 60 \* 24) "0" "0" \
+                        "00:00" "24:00" \
+                        "${ENABLED}" \
+                        "${LOCKSCREEN_MODIFIER}"
+                    exit 0
+                elif [ $day_of_week -eq 7 ]
+                then
+                    if [ $SUNDAY_NIGHT_IS_WEEKNIGHT -eq 1 ]
+                    then
+                        SKIP_TIME_CHECKS=1
+                        log_verbose "    sunday is weeknight. no max, just curfew."
+                    else
+                        log_verbose "    sunday permitted. skipping."
+                        write_user_stats "${user_name}" \
+                            $(expr 60 \* 24) "0" \
+                            $(expr 60 \* 24) "0" "0" \
+                            "00:00" "24:00" \
+                            "${ENABLED}" \
+                            "${LOCKSCREEN_MODIFIER}"
+                        exit 0
+                    fi
+                fi
             fi
 
             #
@@ -192,13 +195,23 @@ do
                 "${LOCKSCREEN_MODIFIER}"
 
             #
-            #: Daily Limits
+            #: Daily Time Check
             #
-            if [ $daily_total -gt $TOTAL_DAILY_MAX ]
+            if [ $SKIP_TIME_CHECKS -eq 0 ]
             then
-                log_verbose "    daily limit exceded! lock and slay."
-                lock_and_slay ${user_name}
-            else
+                if [ $daily_total -gt $TOTAL_DAILY_MAX ]
+                then
+                    log_verbose "    daily limit exceded! lock and slay."
+                    lock_and_slay ${user_name}
+                    exit 0
+                fi
+            fi
+
+            #
+            #: Daily Curfew Check
+            #
+            if [ $SKIP_CURFEW_CHECKS -eq 0 ]
+            then
                 log_verbose "    within daily limits"
                 if [ $this_hour -gt $DAILY_OPEN_HOUR ] || [ $this_hour -eq $DAILY_OPEN_HOUR -a $this_minute -ge $DAILY_OPEN_MINUTE ]
                 then
@@ -206,41 +219,52 @@ do
                     then
                         log_verbose "    user is within allowed daily window"
                         unlock_user ${user_name}
-                        log_verbose "    checking for reminders..."
-                        case "$daily_delta" in
-                            "180"|"120"|"60"|"30"|"20"|"10")
-                                log_verbose "        info daily_delta: ${daily_delta}"
-                                notify_user_info ${user} "Tick Tock..." \
-                                    "You have ${daily_delta} minutes left on your daily computer limit..."
-                                ;;
-                            "5"|"2")
-                                log_verbose "        warn daily_delta: ${daily_delta}"
-                                notify_user_warn ${user} "Tough Bananas :)" \
-                                    "You have ${daily_delta} minutes left on your daily computer limit... Save your game/files/whatever ASAP :D"
-                                ;;
-                        esac
-                        log_verbose "        close_delta: $close_minutes - $these_minutes = ${close_delta}"
-                        case "$close_delta" in
-                            "30"|"20"|"10")
-                                log_verbose "        info close_delta: ${close_delta}"
-                                notify_user_info ${user} "Getting Close..." \
-                                    "Your computer curfew is in ${close_delta} minutes..."
-                                ;;
-                            "5"|"2")
-                                log_verbose "        warn close_delta: ${close_delta}"
-                                notify_user_warn ${user} "Curfew Time..." \
-                                    "Your computer curfew is in ${close_delta} minutes... Save your game/files/whatever ASAP :D"
-                                ;;
-                        esac
                     else
                         log_verbose "    past allowed window, lock and slay"
                         lock_and_slay ${user_name}
+                        exit 0
                     fi
                 else
                     log_verbose "    before allowed window, lock and slay"
                     lock_and_slay ${user_name}
+                    exit 0
                 fi
             fi
+
+            #
+            #: Display Reminder Notices
+            #
+
+            log_verbose "    checking for reminders..."
+            case "$daily_delta" in
+                "180"|"120"|"60"|"30"|"20"|"10")
+                    log_verbose "        info daily_delta: ${daily_delta}"
+                    notify_user_info ${user} "Tick Tock..." \
+                        "You have ${daily_delta} minutes left on your daily computer limit..."
+                    ;;
+                "5"|"2")
+                    log_verbose "        warn daily_delta: ${daily_delta}"
+                    notify_user_warn ${user} "Tough Bananas :)" \
+                        "You have ${daily_delta} minutes left on your daily computer limit... Save your game/files/whatever ASAP :D"
+                    ;;
+            esac
+
+            log_verbose "        close_delta: $close_minutes - $these_minutes = ${close_delta}"
+            case "$close_delta" in
+                "30"|"20"|"10")
+                    log_verbose "        info close_delta: ${close_delta}"
+                    notify_user_info ${user} "Getting Close..." \
+                        "Your computer curfew is in ${close_delta} minutes..."
+                    ;;
+                "5"|"2")
+                    log_verbose "        warn close_delta: ${close_delta}"
+                    notify_user_warn ${user} "Curfew Time..." \
+                        "Your computer curfew is in ${close_delta} minutes... Save your game/files/whatever ASAP :D"
+                    ;;
+            esac
+
+
+        # end of if-user-enabled
         else
             log_verbose "    tracking disabled for user"
             unlock_user ${user_name}
